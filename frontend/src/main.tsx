@@ -11,8 +11,8 @@ import { Toaster } from "sonner";
 import "./app.css";
 
 import { persistor, store } from "@/store";
-import { ThemeProvider } from "@components/ThemeProvider";
 import { Layout } from "@components/Layout";
+import { ThemeProvider } from "@components/ThemeProvider";
 import Home from "@pages/Home";
 import Login from "@pages/Login";
 import Register from "@pages/Register";

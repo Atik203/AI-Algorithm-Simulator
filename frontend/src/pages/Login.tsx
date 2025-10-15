@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { useAppDispatch } from "@/store/hooks";
+import { setUser } from "@/store/slices/userSlice";
 import { authService } from "@api/auth";
 import { Button } from "@components/ui/button";
 import {
@@ -20,8 +22,6 @@ import {
 import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
 import { fadeInUp, staggerContainer } from "@lib/animations";
-import { useAppDispatch } from "@/store/hooks";
-import { setUser } from "@/store/slices/userSlice";
 
 // Validation schema
 const loginSchema = z.object({
@@ -63,14 +63,16 @@ export default function Login() {
       // Get tokens from storage
       const access = authService.getAccessToken();
       const refresh = authService.getRefreshToken();
-      
+
       // Update Redux store
       if (access && refresh) {
-        dispatch(setUser({
-          user: userData,
-          access,
-          refresh,
-        }));
+        dispatch(
+          setUser({
+            user: userData,
+            access,
+            refresh,
+          })
+        );
       }
 
       toast.success("Welcome back!", {
@@ -84,8 +86,7 @@ export default function Login() {
       }, 800);
     } catch (err: any) {
       toast.error("Login failed", {
-        description:
-          err.message || "Invalid credentials",
+        description: err.message || "Invalid credentials",
       });
     } finally {
       setIsLoading(false);
