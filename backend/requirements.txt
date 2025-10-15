@@ -15,4 +15,4 @@ python-dotenv>=1.0.0
 
 # Production
 gunicorn>=23.0
-# whitenoise>=6.8  # Static file serving
+whitenoise>=6.8  # Static file serving
