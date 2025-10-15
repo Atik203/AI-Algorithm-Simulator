@@ -14,6 +14,7 @@ import { persistor, store } from "@/store";
 import { Layout } from "@components/Layout";
 import { ThemeProvider } from "@components/ThemeProvider";
 import Dashboard from "@pages/Dashboard";
+import History from "@pages/History";
 import Home from "@pages/Home";
 import Login from "@pages/Login";
 import Register from "@pages/Register";
@@ -57,6 +58,14 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <Dashboard />
+      </Layout>
+    ),
+  },
+  {
+    path: "/history",
+    element: (
+      <Layout>
+        <History />
       </Layout>
     ),
   },

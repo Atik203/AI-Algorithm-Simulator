@@ -47,6 +47,7 @@ export function Navbar() {
   const navItems = [
     { label: "Home", path: "/" },
     { label: "Simulator", path: "/simulator" },
+    ...(isAuthenticated ? [{ label: "History", path: "/history" }] : []),
   ];
 
   return (

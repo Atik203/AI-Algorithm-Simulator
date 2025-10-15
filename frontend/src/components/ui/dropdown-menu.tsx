@@ -101,7 +101,8 @@ export function DropdownMenuContent({
   return (
     <div
       ref={ref}
-      className={`absolute ${alignmentClass} mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-slate-800 ring-1 ring-black ring-opacity-5 z-50 ${className}`}
+      className={`absolute ${alignmentClass} mt-2 w-56 rounded-lg shadow-xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 overflow-hidden z-[100] ${className}`}
+      style={{ top: "100%" }}
     >
       <div className="py-1" role="menu">
         {children}
@@ -124,7 +125,7 @@ export function DropdownMenuItem({
 
   return (
     <button
-      className={`w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${className}`}
+      className={`w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors flex items-center ${className}`}
       role="menuitem"
       onClick={handleClick}
     >
@@ -150,7 +151,7 @@ export function DropdownMenuLabel({
 }: DropdownMenuLabelProps) {
   return (
     <div
-      className={`px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white ${className}`}
+      className={`px-4 py-2.5 text-sm font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-800 ${className}`}
     >
       {children}
     </div>

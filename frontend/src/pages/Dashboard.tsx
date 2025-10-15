@@ -66,34 +66,24 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await apiClient.get("/simulations/");
-      const sims: SimulationData[] = response.data.results || response.data;
+      // Fetch dashboard stats from backend
+      const statsResponse = await apiClient.get("/dashboard/stats/");
+      const dashboardData = statsResponse.data;
 
-      setSimulations(sims.slice(0, 10)); // Latest 10 simulations
+      // Set statistics
+      setStats({
+        totalSimulations: dashboardData.total_simulations,
+        successfulSimulations: dashboardData.successful_simulations,
+        favoriteAlgorithm: dashboardData.favorite_algorithm
+          ? dashboardData.favorite_algorithm.algorithm.toUpperCase()
+          : "N/A",
+        avgExecutionTime: dashboardData.avg_execution_time,
+        totalNodesExplored: dashboardData.total_simulations * 100, // Estimate
+      });
 
-      // Calculate stats
-      if (sims.length > 0) {
-        const successful = sims.filter((s) => s.path_found).length;
-        const totalNodes = sims.reduce((sum, s) => sum + s.nodes_explored, 0);
-        const totalTime = sims.reduce((sum, s) => sum + s.execution_time, 0);
-
-        // Find favorite algorithm
-        const algorithmCount: Record<string, number> = {};
-        sims.forEach((s) => {
-          algorithmCount[s.algorithm] = (algorithmCount[s.algorithm] || 0) + 1;
-        });
-        const favorite = Object.entries(algorithmCount).reduce(
-          (a, b) => (b[1] > a[1] ? b : a),
-          ["N/A", 0]
-        )[0];
-
-        setStats({
-          totalSimulations: sims.length,
-          successfulSimulations: successful,
-          favoriteAlgorithm: favorite.toUpperCase(),
-          avgExecutionTime: totalTime / sims.length,
-          totalNodesExplored: totalNodes,
-        });
+      // Set recent simulations
+      if (dashboardData.recent_simulations) {
+        setSimulations(dashboardData.recent_simulations);
       }
     } catch (error: any) {
       toast.error("Failed to load dashboard data", {
