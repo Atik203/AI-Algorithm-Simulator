@@ -2,6 +2,24 @@
  * Types and interfaces for the Algorithm Visualizer
  */
 
+// Simulation Types
+export type SimulationType = 
+  | 'pathfinding'
+  | '8-puzzle'
+  | 'n-queens'
+  | 'tic-tac-toe'
+  | 'sudoku'
+  | 'tower-of-hanoi';
+
+export interface SimulationTypeInfo {
+  id: SimulationType;
+  name: string;
+  description: string;
+  algorithms: string[];
+  icon: string;
+}
+
+// Pathfinding Types
 export type CellType = 
   | 'empty'
   | 'wall'
@@ -19,7 +37,11 @@ export type AlgorithmType =
   | 'dijkstra'
   | 'hill_climbing'
   | 'simulated_annealing'
-  | 'genetic';
+  | 'genetic'
+  | 'minimax'
+  | 'alpha_beta'
+  | 'backtracking'
+  | 'recursive';
 
 export type HeuristicType = 
   | 'manhattan'
