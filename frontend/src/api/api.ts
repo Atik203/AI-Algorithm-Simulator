@@ -110,3 +110,74 @@ export interface AggregatedQueryParams extends LogQueryParams {
 
 export const getAggregatedLogs = (params: AggregatedQueryParams = {}) =>
   get<AggregatedLogDatum[]>("/logs/aggregated/", { params });
+
+// Simulation Types
+export interface SimulationType {
+  id: string;
+  name: string;
+  description: string;
+  algorithms: string[];
+  icon: string;
+}
+
+export const getSimulationTypes = () =>
+  get<SimulationType[]>("/simulation-types/");
+
+// Puzzle API
+export interface PuzzleSolveRequest {
+  puzzle_type: "8-puzzle" | "n-queens" | "sudoku";
+  algorithm?: "astar" | "bfs" | "backtracking";
+  initial_state?: number[][];
+  board?: number[][];
+  board_size?: number;
+  find_all?: boolean;
+}
+
+export interface PuzzleSolveResponse {
+  solved: boolean;
+  steps: any[];
+  solution?: number[][];
+  solutions?: number[][][];
+  solution_count?: number;
+  nodes_explored: number;
+  moves?: number;
+  algorithm: string;
+  message?: string;
+  path?: number[][][];
+  board_size?: number;
+}
+
+export const solvePuzzle = (data: PuzzleSolveRequest) =>
+  post<PuzzleSolveResponse, PuzzleSolveRequest>("/solve-puzzle/", data);
+
+// Game API
+export interface GamePlayRequest {
+  game_type: "tic-tac-toe" | "tower-of-hanoi" | "connect4";
+  action?: "find_move" | "play_game";
+  board?: string[][];
+  player?: "X" | "O";
+  use_alpha_beta?: boolean;
+  first_player?: "X" | "O";
+  n_disks?: number;
+  piece?: "X" | "O";
+  depth?: number;
+}
+
+export interface GamePlayResponse {
+  best_move?: [number, number] | number;
+  best_score?: number;
+  winner?: "X" | "O" | "draw" | null;
+  game_history?: any[];
+  evaluations?: any[];
+  total_moves?: number;
+  algorithm: string;
+  n_disks?: number;
+  steps?: any[];
+  optimal_moves?: number;
+  is_optimal?: boolean;
+  best_column?: number;
+  score?: number;
+}
+
+export const playGame = (data: GamePlayRequest) =>
+  post<GamePlayResponse, GamePlayRequest>("/play-game/", data);

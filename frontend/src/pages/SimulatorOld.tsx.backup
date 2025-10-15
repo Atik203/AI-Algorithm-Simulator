@@ -1,17 +1,14 @@
 /**
- * Updated Simulator Page - Supports Multiple Simulation Types
- * Pathfinding, 8-Puzzle, N-Queens, Tic-Tac-Toe, etc.
+ * Simulator Page - Main page for algorithm visualization
+ * Complete Phase 2 implementation
  */
 
-import { apiClient, getSimulationTypes, type SimulationType as APISimulationType } from "@/api/api";
+import { apiClient } from "@/api/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AlgorithmStatistics } from "@/components/visualizer/AlgorithmStatistics";
 import { AlgorithmVisualizer } from "@/components/visualizer/AlgorithmVisualizer";
 import { VisualizerControls } from "@/components/visualizer/VisualizerControls";
-import { EightPuzzleVisualizer } from "@/components/puzzle/EightPuzzleVisualizer";
-import { NQueensVisualizer } from "@/components/puzzle/NQueensVisualizer";
-import { TicTacToe } from "@/components/game/TicTacToe";
 import { fadeIn, fadeInUp, staggerContainer } from "@/lib/animations";
 import {
   addRandomObstacles,
@@ -27,7 +24,6 @@ import type {
   HeuristicType,
   Position,
   Statistics,
-  SimulationType,
 } from "@/types/visualizer";
 import { GRID_CONFIGS } from "@/types/visualizer";
 import { motion } from "framer-motion";
@@ -37,9 +33,6 @@ import {
   Eraser,
   Grid3x3,
   Wand2,
-  Lightbulb,
-  Gamepad2,
-  Puzzle,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -50,11 +43,7 @@ export default function Simulator() {
   // Redux state
   const { isAuthenticated } = useAppSelector((state) => state.user);
 
-  // Simulation Type State
-  const [simulationType, setSimulationType] = useState<SimulationType>("pathfinding");
-  const [simulationTypes, setSimulationTypes] = useState<APISimulationType[]>([]);
-
-  // Grid State (for pathfinding)
+  // Grid State
   const [gridSize, setGridSize] = useState<GridSize>("medium");
   const config = GRID_CONFIGS[gridSize];
 
@@ -96,40 +85,24 @@ export default function Simulator() {
     memoryUsage: 0,
   });
 
-  // Load simulation types on mount
+  // Update grid when size changes
   useEffect(() => {
-    const loadSimulationTypes = async () => {
-      try {
-        const types = await getSimulationTypes();
-        setSimulationTypes(types);
-      } catch (error) {
-        console.error("Failed to load simulation types:", error);
-        toast.error("Failed to load simulation types");
-      }
-    };
-    loadSimulationTypes();
-  }, []);
+    const newConfig = GRID_CONFIGS[gridSize];
+    setGridState({
+      grid: createEmptyGrid(newConfig.rows, newConfig.cols),
+      start: { row: 5, col: 5 },
+      goal: { row: newConfig.rows - 6, col: newConfig.cols - 6 },
+      rows: newConfig.rows,
+      cols: newConfig.cols,
+    });
+    setSteps([]);
+    setCurrentStep(0);
+  }, [gridSize]);
 
-  // Update grid when size changes (pathfinding only)
+  // Playback animation
   useEffect(() => {
-    if (simulationType === "pathfinding") {
-      const newConfig = GRID_CONFIGS[gridSize];
-      setGridState({
-        grid: createEmptyGrid(newConfig.rows, newConfig.cols),
-        start: { row: 5, col: 5 },
-        goal: { row: newConfig.rows - 6, col: newConfig.cols - 6 },
-        rows: newConfig.rows,
-        cols: newConfig.cols,
-      });
-      setSteps([]);
-      setCurrentStep(0);
-    }
-  }, [gridSize, simulationType]);
-
-  // Playback animation (pathfinding only)
-  useEffect(() => {
-    if (isPlaying && currentStep < steps.length && simulationType === "pathfinding") {
-      const delay = 1000 / (speed * 10);
+    if (isPlaying && currentStep < steps.length) {
+      const delay = 1000 / (speed * 10); // Adjust speed
       intervalRef.current = setTimeout(() => {
         setCurrentStep((prev) => prev + 1);
       }, delay);
@@ -142,31 +115,29 @@ export default function Simulator() {
         clearTimeout(intervalRef.current);
       }
     };
-  }, [isPlaying, currentStep, steps.length, speed, simulationType]);
+  }, [isPlaying, currentStep, steps.length, speed]);
 
-  // Update statistics (pathfinding only)
+  // Update statistics
   useEffect(() => {
-    if (simulationType === "pathfinding") {
-      const visited = steps
-        .slice(0, currentStep)
-        .filter((s) => s.type === "visit").length;
-      const frontier = steps
-        .slice(0, currentStep)
-        .filter((s) => s.type === "frontier").length;
-      const path = steps.filter((s) => s.type === "path");
+    const visited = steps
+      .slice(0, currentStep)
+      .filter((s) => s.type === "visit").length;
+    const frontier = steps
+      .slice(0, currentStep)
+      .filter((s) => s.type === "frontier").length;
+    const path = steps.filter((s) => s.type === "path");
 
-      setStatistics((prev) => ({
-        ...prev,
-        nodesExplored: visited,
-        nodesInFrontier: frontier,
-        pathLength: path.length,
-        currentStep,
-        totalSteps: steps.length,
-      }));
-    }
-  }, [currentStep, steps, simulationType]);
+    setStatistics((prev) => ({
+      ...prev,
+      nodesExplored: visited,
+      nodesInFrontier: frontier,
+      pathLength: path.length,
+      currentStep,
+      totalSteps: steps.length,
+    }));
+  }, [currentStep, steps]);
 
-  // Run Pathfinding Algorithm
+  // Run Algorithm
   const runAlgorithm = async () => {
     setIsLoading(true);
     setSteps([]);
@@ -180,7 +151,7 @@ export default function Simulator() {
         start: [gridState.start.row, gridState.start.col],
         goal: [gridState.goal.row, gridState.goal.col],
         heuristic,
-        save_simulation: isAuthenticated,
+        save_simulation: isAuthenticated, // Only save if user is logged in
       });
 
       const data = response.data;
@@ -244,7 +215,7 @@ export default function Simulator() {
     }
   };
 
-  // Cell interaction handlers (pathfinding only)
+  // Cell interaction handlers
   const handleCellClick = useCallback(
     (row: number, col: number) => {
       const pos: Position = { row, col };
@@ -279,7 +250,7 @@ export default function Simulator() {
     [drawMode, handleCellClick]
   );
 
-  // Control handlers (pathfinding only)
+  // Control handlers
   const handlePlay = () => {
     if (steps.length === 0) {
       runAlgorithm();
@@ -344,31 +315,52 @@ export default function Simulator() {
     toast.success("Random obstacles added!");
   };
 
-  // Get icon for simulation type
-  const getSimulationIcon = (type: SimulationType) => {
-    switch (type) {
-      case "pathfinding":
-        return <Grid3x3 className="h-5 w-5" />;
-      case "8-puzzle":
-      case "n-queens":
-      case "sudoku":
-        return <Puzzle className="h-5 w-5" />;
-      case "tic-tac-toe":
-        return <Gamepad2 className="h-5 w-5" />;
-      case "tower-of-hanoi":
-        return <Lightbulb className="h-5 w-5" />;
-      default:
-        return <Grid3x3 className="h-5 w-5" />;
-    }
-  };
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
+      {/* Header */}
+      <motion.header
+        variants={fadeIn}
+        initial="hidden"
+        animate="visible"
+        className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      >
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Grid3x3 className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Algorithm Simulator</h1>
+                <p className="text-sm text-muted-foreground">
+                  Visualize search algorithms in real-time
+                </p>
+              </div>
+            </div>
 
-  // Render appropriate visualizer based on simulation type
-  const renderVisualizer = () => {
-    switch (simulationType) {
-      case "pathfinding":
-        return (
-          <div className="space-y-4">
-            {/* Pathfinding Toolbar */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="lg:hidden"
+            >
+              {sidebarCollapsed ? <ChevronLeft /> : <ChevronRight />}
+            </Button>
+          </div>
+        </div>
+      </motion.header>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid lg:grid-cols-[1fr,400px] gap-6">
+          {/* Left: Visualizer */}
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="space-y-4"
+          >
+            {/* Toolbar */}
             <Card className="p-4">
               <div className="flex flex-wrap items-center gap-3">
                 {/* Draw Mode */}
@@ -452,134 +444,22 @@ export default function Simulator() {
             </Card>
 
             {/* Visualizer */}
-            <Card className="p-4">
-              <div className="aspect-square max-h-[calc(100vh-300px)]">
-                <AlgorithmVisualizer
-                  gridState={gridState}
-                  steps={steps}
-                  currentStep={currentStep}
-                  isPlaying={isPlaying}
-                  onCellClick={handleCellClick}
-                  onCellDrag={handleCellDrag}
-                  gridSize={gridSize}
-                  showGrid={showGrid}
-                />
-              </div>
-            </Card>
-          </div>
-        );
-
-      case "8-puzzle":
-        return <EightPuzzleVisualizer />;
-
-      case "n-queens":
-        return <NQueensVisualizer />;
-
-      case "tic-tac-toe":
-        return <TicTacToe />;
-
-      case "sudoku":
-        return (
-          <Card className="p-8 text-center">
-            <Puzzle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Sudoku Solver</h3>
-            <p className="text-muted-foreground mb-4">
-              Sudoku visualizer coming soon!
-            </p>
-            <p className="text-sm text-muted-foreground">
-              This feature is under development. Try 8-Puzzle or N-Queens instead.
-            </p>
-          </Card>
-        );
-
-      case "tower-of-hanoi":
-        return (
-          <Card className="p-8 text-center">
-            <Lightbulb className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Tower of Hanoi</h3>
-            <p className="text-muted-foreground mb-4">
-              Tower of Hanoi visualizer coming soon!
-            </p>
-            <p className="text-sm text-muted-foreground">
-              This feature is under development. Try Tic-Tac-Toe or N-Queens instead.
-            </p>
-          </Card>
-        );
-
-      default:
-        return (
-          <Card className="p-8 text-center">
-            <p className="text-muted-foreground">Select a simulation type to begin</p>
-          </Card>
-        );
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
-      {/* Header */}
-      <motion.header
-        variants={fadeIn}
-        initial="hidden"
-        animate="visible"
-        className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-      >
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                {getSimulationIcon(simulationType)}
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">Algorithm Simulator</h1>
-                <p className="text-sm text-muted-foreground">
-                  Visualize algorithms in real-time
-                </p>
-              </div>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="lg:hidden"
-            >
-              {sidebarCollapsed ? <ChevronLeft /> : <ChevronRight />}
-            </Button>
-          </div>
-
-          {/* Simulation Type Selector */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            {simulationTypes.map((type) => (
-              <Button
-                key={type.id}
-                variant={simulationType === type.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => {
-                  setSimulationType(type.id as SimulationType);
-                  handleReset();
-                }}
-                className="flex items-center gap-2"
-              >
-                {getSimulationIcon(type.id as SimulationType)}
-                <span className="hidden sm:inline">{type.name}</span>
-              </Button>
-            ))}
-          </div>
-        </div>
-      </motion.header>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-[1fr,400px] gap-6">
-          {/* Left: Visualizer */}
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="space-y-4"
-          >
-            {renderVisualizer()}
+            <motion.div variants={fadeInUp}>
+              <Card className="p-4">
+                <div className="aspect-square max-h-[calc(100vh-300px)]">
+                  <AlgorithmVisualizer
+                    gridState={gridState}
+                    steps={steps}
+                    currentStep={currentStep}
+                    isPlaying={isPlaying}
+                    onCellClick={handleCellClick}
+                    onCellDrag={handleCellDrag}
+                    gridSize={gridSize}
+                    showGrid={showGrid}
+                  />
+                </div>
+              </Card>
+            </motion.div>
           </motion.div>
 
           {/* Right: Controls & Statistics */}
@@ -589,68 +469,33 @@ export default function Simulator() {
             animate="visible"
             className={`space-y-4 ${sidebarCollapsed ? "hidden lg:block" : ""}`}
           >
-            {simulationType === "pathfinding" && (
-              <>
-                <VisualizerControls
-                  isPlaying={isPlaying}
-                  isPaused={!isPlaying && currentStep > 0}
-                  currentStep={currentStep}
-                  totalSteps={steps.length}
-                  speed={speed}
-                  algorithm={algorithm}
-                  heuristic={heuristic}
-                  gridSize={gridSize}
-                  showGrid={showGrid}
-                  onPlay={handlePlay}
-                  onPause={handlePause}
-                  onStepForward={handleStepForward}
-                  onStepBackward={handleStepBackward}
-                  onReset={handleReset}
-                  onSpeedChange={setSpeed}
-                  onAlgorithmChange={setAlgorithm}
-                  onHeuristicChange={setHeuristic}
-                  onGridSizeChange={setGridSize}
-                  onShowGridToggle={() => setShowGrid(!showGrid)}
-                />
+            <VisualizerControls
+              isPlaying={isPlaying}
+              isPaused={!isPlaying && currentStep > 0}
+              currentStep={currentStep}
+              totalSteps={steps.length}
+              speed={speed}
+              algorithm={algorithm}
+              heuristic={heuristic}
+              gridSize={gridSize}
+              showGrid={showGrid}
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onStepForward={handleStepForward}
+              onStepBackward={handleStepBackward}
+              onReset={handleReset}
+              onSpeedChange={setSpeed}
+              onAlgorithmChange={setAlgorithm}
+              onHeuristicChange={setHeuristic}
+              onGridSizeChange={setGridSize}
+              onShowGridToggle={() => setShowGrid(!showGrid)}
+            />
 
-                <AlgorithmStatistics
-                  statistics={statistics}
-                  algorithm={algorithm}
-                  isComplete={currentStep === steps.length && steps.length > 0}
-                />
-              </>
-            )}
-
-            {simulationType !== "pathfinding" && (
-              <Card className="p-6">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  {getSimulationIcon(simulationType)}
-                  {simulationTypes.find((t) => t.id === simulationType)?.name ||
-                    "Simulation"}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {simulationTypes.find((t) => t.id === simulationType)
-                    ?.description || "Interactive algorithm visualization"}
-                </p>
-                <div className="space-y-2">
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Algorithms:</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {simulationTypes
-                        .find((t) => t.id === simulationType)
-                        ?.algorithms.map((alg: string) => (
-                          <span
-                            key={alg}
-                            className="px-2 py-1 bg-secondary text-xs rounded"
-                          >
-                            {alg}
-                          </span>
-                        ))}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            )}
+            <AlgorithmStatistics
+              statistics={statistics}
+              algorithm={algorithm}
+              isComplete={currentStep === steps.length && steps.length > 0}
+            />
           </motion.div>
         </div>
       </div>
