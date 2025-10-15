@@ -219,30 +219,58 @@ export default function Home() {
                 onClick={() => navigate("/simulator")}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg cursor-pointer text-lg px-8"
               >
-                Try Simulator
+                {isAuthenticated ? "Go to Simulator" : "Try Simulator"}
                 <Sparkles className="ml-2 h-5 w-5" />
               </Button>
             </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                size="lg"
-                onClick={() => navigate("/login")}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold shadow-lg cursor-pointer text-lg px-8"
+
+            {!isAuthenticated && (
+              <>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    size="lg"
+                    onClick={() => navigate("/login")}
+                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold shadow-lg cursor-pointer text-lg px-8"
+                  >
+                    Get Started
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => navigate("/register")}
+                    className="cursor-pointer border-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-lg px-8"
+                  >
+                    Sign Up Free
+                  </Button>
+                </motion.div>
+              </>
+            )}
+
+            {isAuthenticated && (
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Get Started
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => navigate("/register")}
-                className="cursor-pointer border-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-lg px-8"
-              >
-                Sign Up Free
-              </Button>
-            </motion.div>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => navigate("/dashboard")}
+                  className="cursor-pointer border-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-lg px-8"
+                >
+                  View Dashboard
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </motion.div>
+            )}
           </motion.div>
 
           <motion.div
@@ -384,28 +412,63 @@ export default function Home() {
             variants={fadeInUp}
             className="text-3xl md:text-4xl font-bold mb-4"
           >
-            Ready to explore?
+            {isAuthenticated ? "Continue Learning!" : "Ready to explore?"}
           </motion.h2>
 
           <motion.p
             variants={fadeInUp}
             className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto"
           >
-            Join thousands of developers learning and visualizing AI search
-            algorithms in real-time
+            {isAuthenticated
+              ? "Access your dashboard to view simulation history and track your progress"
+              : "Join thousands of developers learning and visualizing AI search algorithms in real-time"}
           </motion.p>
 
           <motion.div variants={fadeInUp} className="flex justify-center gap-4">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                size="lg"
-                onClick={() => navigate("/register")}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold shadow-lg cursor-pointer"
+            {isAuthenticated ? (
+              <>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    size="lg"
+                    onClick={() => navigate("/simulator")}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg cursor-pointer"
+                  >
+                    Open Simulator
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => navigate("/dashboard")}
+                    className="cursor-pointer"
+                  >
+                    View Dashboard
+                  </Button>
+                </motion.div>
+              </>
+            ) : (
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Create Free Account
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </motion.div>
+                <Button
+                  size="lg"
+                  onClick={() => navigate("/register")}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold shadow-lg cursor-pointer"
+                >
+                  Create Free Account
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </motion.div>
+            )}
           </motion.div>
         </motion.div>
       </div>

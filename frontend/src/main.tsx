@@ -13,6 +13,7 @@ import "./app.css";
 import { persistor, store } from "@/store";
 import { Layout } from "@components/Layout";
 import { ThemeProvider } from "@components/ThemeProvider";
+import Dashboard from "@pages/Dashboard";
 import Home from "@pages/Home";
 import Login from "@pages/Login";
 import Register from "@pages/Register";
@@ -48,6 +49,22 @@ const router = createBrowserRouter([
     element: (
       <Layout showFooter={false}>
         <Simulator />
+      </Layout>
+    ),
+  },
+  {
+    path: "/dashboard",
+    element: (
+      <Layout>
+        <Dashboard />
+      </Layout>
+    ),
+  },
+  {
+    path: "/profile",
+    element: (
+      <Layout>
+        <Dashboard />
       </Layout>
     ),
   },

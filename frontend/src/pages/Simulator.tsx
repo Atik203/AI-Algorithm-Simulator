@@ -3,50 +3,50 @@
  * Complete Phase 2 implementation
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import { apiClient } from "@/api/api";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { AlgorithmStatistics } from "@/components/visualizer/AlgorithmStatistics";
+import { AlgorithmVisualizer } from "@/components/visualizer/AlgorithmVisualizer";
+import { VisualizerControls } from "@/components/visualizer/VisualizerControls";
+import { fadeIn, fadeInUp, staggerContainer } from "@/lib/animations";
 import {
-  Grid3x3,
-  Wand2,
-  Eraser,
-  Download,
-  Info,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { AlgorithmVisualizer } from '@/components/visualizer/AlgorithmVisualizer';
-import { VisualizerControls } from '@/components/visualizer/VisualizerControls';
-import { AlgorithmStatistics } from '@/components/visualizer/AlgorithmStatistics';
-import type {
-  GridState,
-  AlgorithmStep,
-  AlgorithmType,
-  HeuristicType,
-  GridSize,
-  Statistics,
-  Position,
-} from '@/types/visualizer';
-import {
+  addRandomObstacles,
   createEmptyGrid,
   generateRandomMaze,
-  addRandomObstacles,
-  gridStateToAPI,
-  downloadCanvasAsImage,
-} from '@/lib/visualizer-utils';
-import { GRID_CONFIGS } from '@/types/visualizer';
-import { fadeIn, fadeInUp, staggerContainer } from '@/lib/animations';
-import { apiClient } from '@/api/api';
+} from "@/lib/visualizer-utils";
+import { useAppSelector } from "@/store/hooks";
+import type {
+  AlgorithmStep,
+  AlgorithmType,
+  GridSize,
+  GridState,
+  HeuristicType,
+  Position,
+  Statistics,
+} from "@/types/visualizer";
+import { GRID_CONFIGS } from "@/types/visualizer";
+import { motion } from "framer-motion";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eraser,
+  Grid3x3,
+  Wand2,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
-type DrawMode = 'wall' | 'empty' | 'start' | 'goal';
+type DrawMode = "wall" | "empty" | "start" | "goal";
 
 export default function Simulator() {
+  // Redux state
+  const { isAuthenticated } = useAppSelector((state) => state.user);
+
   // Grid State
-  const [gridSize, setGridSize] = useState<GridSize>('medium');
+  const [gridSize, setGridSize] = useState<GridSize>("medium");
   const config = GRID_CONFIGS[gridSize];
-  
+
   const [gridState, setGridState] = useState<GridState>(() => ({
     grid: createEmptyGrid(config.rows, config.cols),
     start: { row: 5, col: 5 },
@@ -56,8 +56,8 @@ export default function Simulator() {
   }));
 
   // Algorithm State
-  const [algorithm, setAlgorithm] = useState<AlgorithmType>('astar');
-  const [heuristic, setHeuristic] = useState<HeuristicType>('manhattan');
+  const [algorithm, setAlgorithm] = useState<AlgorithmType>("astar");
+  const [heuristic, setHeuristic] = useState<HeuristicType>("manhattan");
   const [steps, setSteps] = useState<AlgorithmStep[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -69,7 +69,7 @@ export default function Simulator() {
   const [isLoading, setIsLoading] = useState(false);
 
   // UI State
-  const [drawMode, setDrawMode] = useState<DrawMode>('wall');
+  const [drawMode, setDrawMode] = useState<DrawMode>("wall");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -121,11 +121,11 @@ export default function Simulator() {
   useEffect(() => {
     const visited = steps
       .slice(0, currentStep)
-      .filter((s) => s.type === 'visit').length;
+      .filter((s) => s.type === "visit").length;
     const frontier = steps
       .slice(0, currentStep)
-      .filter((s) => s.type === 'frontier').length;
-    const path = steps.filter((s) => s.type === 'path');
+      .filter((s) => s.type === "frontier").length;
+    const path = steps.filter((s) => s.type === "path");
 
     setStatistics((prev) => ({
       ...prev,
@@ -145,52 +145,71 @@ export default function Simulator() {
     setIsPlaying(false);
 
     try {
-      const response = await apiClient.post('/algorithms/run/', {
+      const response = await apiClient.post("/run-algorithm/", {
         algorithm,
-        ...gridStateToAPI(gridState),
+        grid: gridState.grid,
+        start: [gridState.start.row, gridState.start.col],
+        goal: [gridState.goal.row, gridState.goal.col],
         heuristic,
-        save_simulation: false,
+        save_simulation: isAuthenticated, // Only save if user is logged in
       });
 
-      // Parse response and create steps
+      const data = response.data;
+
+      // Convert backend steps to frontend format
       const newSteps: AlgorithmStep[] = [];
 
-      // Add visited nodes
-      if (response.data.visited) {
-        response.data.visited.forEach((pos: number[]) => {
+      if (data.steps && Array.isArray(data.steps)) {
+        data.steps.forEach((step: any) => {
           newSteps.push({
-            type: 'visit',
-            position: { row: pos[0], col: pos[1] },
+            type:
+              step.type === "visiting"
+                ? "visit"
+                : step.type === "exploring"
+                ? "frontier"
+                : "visit",
+            position: { row: step.position[0], col: step.position[1] },
           });
         });
       }
 
-      // Add path
-      if (response.data.path && response.data.path_found) {
-        response.data.path.forEach((pos: number[]) => {
+      // Add path as separate steps if found
+      if (data.path_found && data.path && Array.isArray(data.path)) {
+        data.path.forEach((pos: number[]) => {
           newSteps.push({
-            type: 'path',
+            type: "path",
             position: { row: pos[0], col: pos[1] },
           });
         });
       }
 
       setSteps(newSteps);
-      setStatistics((prev) => ({
-        ...prev,
-        pathCost: response.data.path_cost || 0,
-        executionTime: response.data.execution_time || 0,
+      setStatistics({
+        nodesExplored: data.nodes_explored || 0,
+        nodesInFrontier: 0,
+        pathLength: data.path ? data.path.length : 0,
+        pathCost: data.path_cost || 0,
+        executionTime: data.execution_time || 0,
+        currentStep: 0,
         totalSteps: newSteps.length,
-      }));
+        memoryUsage: 0,
+      });
 
-      toast.success(
-        response.data.path_found
-          ? `Path found! Length: ${response.data.path.length}`
-          : 'No path found'
-      );
+      if (data.path_found) {
+        toast.success("Path found!", {
+          description: `Explored ${data.nodes_explored} nodes. Path length: ${data.path.length}`,
+        });
+      } else {
+        toast.warning("No path found", {
+          description: "Try adjusting the grid or obstacles",
+        });
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to run algorithm');
-      console.error('Algorithm execution error:', error);
+      toast.error("Algorithm execution failed", {
+        description:
+          error.response?.data?.error || error.message || "Please try again",
+      });
+      console.error("Algorithm execution error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -201,17 +220,17 @@ export default function Simulator() {
     (row: number, col: number) => {
       const pos: Position = { row, col };
 
-      if (drawMode === 'start') {
+      if (drawMode === "start") {
         setGridState((prev) => ({ ...prev, start: pos }));
-      } else if (drawMode === 'goal') {
+      } else if (drawMode === "goal") {
         setGridState((prev) => ({ ...prev, goal: pos }));
-      } else if (drawMode === 'wall') {
+      } else if (drawMode === "wall") {
         setGridState((prev) => {
           const newGrid = prev.grid.map((r) => [...r]);
           newGrid[row][col] = 1;
           return { ...prev, grid: newGrid };
         });
-      } else if (drawMode === 'empty') {
+      } else if (drawMode === "empty") {
         setGridState((prev) => {
           const newGrid = prev.grid.map((r) => [...r]);
           newGrid[row][col] = 0;
@@ -224,7 +243,7 @@ export default function Simulator() {
 
   const handleCellDrag = useCallback(
     (row: number, col: number) => {
-      if (drawMode === 'wall' || drawMode === 'empty') {
+      if (drawMode === "wall" || drawMode === "empty") {
         handleCellClick(row, col);
       }
     },
@@ -284,7 +303,7 @@ export default function Simulator() {
       grid: generateRandomMaze(prev.rows, prev.cols),
     }));
     handleReset();
-    toast.success('Maze generated!');
+    toast.success("Maze generated!");
   };
 
   const handleRandomObstacles = () => {
@@ -293,7 +312,7 @@ export default function Simulator() {
       grid: addRandomObstacles(createEmptyGrid(prev.rows, prev.cols), 0.3),
     }));
     handleReset();
-    toast.success('Random obstacles added!');
+    toast.success("Random obstacles added!");
   };
 
   return (
@@ -335,41 +354,46 @@ export default function Simulator() {
       <div className="container mx-auto px-4 py-6">
         <div className="grid lg:grid-cols-[1fr,400px] gap-6">
           {/* Left: Visualizer */}
-          <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-4">
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="space-y-4"
+          >
             {/* Toolbar */}
             <Card className="p-4">
               <div className="flex flex-wrap items-center gap-3">
                 {/* Draw Mode */}
                 <div className="flex gap-2">
                   <Button
-                    variant={drawMode === 'wall' ? 'default' : 'outline'}
+                    variant={drawMode === "wall" ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setDrawMode('wall')}
+                    onClick={() => setDrawMode("wall")}
                     title="Draw walls"
                   >
                     <Grid3x3 className="h-4 w-4" />
                   </Button>
                   <Button
-                    variant={drawMode === 'empty' ? 'default' : 'outline'}
+                    variant={drawMode === "empty" ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setDrawMode('empty')}
+                    onClick={() => setDrawMode("empty")}
                     title="Erase"
                   >
                     <Eraser className="h-4 w-4" />
                   </Button>
                   <Button
-                    variant={drawMode === 'start' ? 'default' : 'outline'}
+                    variant={drawMode === "start" ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setDrawMode('start')}
+                    onClick={() => setDrawMode("start")}
                     title="Set start"
                     className="text-green-600"
                   >
                     ▶
                   </Button>
                   <Button
-                    variant={drawMode === 'goal' ? 'default' : 'outline'}
+                    variant={drawMode === "goal" ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setDrawMode('goal')}
+                    onClick={() => setDrawMode("goal")}
                     title="Set goal"
                     className="text-red-600"
                   >
@@ -414,7 +438,7 @@ export default function Simulator() {
                   disabled={isPlaying || isLoading}
                   className="min-w-[120px]"
                 >
-                  {isLoading ? 'Running...' : 'Run Algorithm'}
+                  {isLoading ? "Running..." : "Run Algorithm"}
                 </Button>
               </div>
             </Card>
@@ -443,9 +467,7 @@ export default function Simulator() {
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
-            className={`space-y-4 ${
-              sidebarCollapsed ? 'hidden lg:block' : ''
-            }`}
+            className={`space-y-4 ${sidebarCollapsed ? "hidden lg:block" : ""}`}
           >
             <VisualizerControls
               isPlaying={isPlaying}
