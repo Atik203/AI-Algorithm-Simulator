@@ -161,6 +161,7 @@ export interface GamePlayRequest {
   n_disks?: number;
   piece?: "X" | "O";
   depth?: number;
+  save_simulation?: boolean;
 }
 
 export interface GamePlayResponse {

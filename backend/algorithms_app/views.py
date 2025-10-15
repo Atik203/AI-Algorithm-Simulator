@@ -262,12 +262,48 @@ def play_game(request):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            # Save simulation if requested and user is authenticated
+            if request.data.get("save_simulation") and request.user.is_authenticated:
+                algorithm = (
+                    "tic-tac-toe-alphabeta" if use_alpha_beta else "tic-tac-toe-minimax"
+                )
+                Simulation.objects.create(
+                    user=request.user,
+                    simulation_type="tic-tac-toe",
+                    algorithm=algorithm,
+                    nodes_explored=result.get("nodes_explored", 0),
+                    path_cost=0,
+                    execution_time=result.get("execution_time", 0),
+                    total_moves=(
+                        len(result.get("game_history", []))
+                        if action == "play_game"
+                        else 1
+                    ),
+                    path_found=True,
+                    solved=result.get("winner") is not None,
+                )
+
             return Response(result, status=status.HTTP_200_OK)
 
         elif game_type == "tower-of-hanoi":
             n_disks = request.data.get("n_disks", 3)
             solver = TowerOfHanoi(n_disks)
             result = solver.get_solution()
+
+            # Save simulation if requested and user is authenticated
+            if request.data.get("save_simulation") and request.user.is_authenticated:
+                Simulation.objects.create(
+                    user=request.user,
+                    simulation_type="tower-of-hanoi",
+                    algorithm="tower-of-hanoi",
+                    nodes_explored=result.get("total_moves", 0),
+                    path_cost=0,
+                    execution_time=result.get("execution_time", 0),
+                    total_moves=result.get("total_moves", 0),
+                    board_size=n_disks,
+                    path_found=True,
+                    solved=True,
+                )
 
             return Response(result, status=status.HTTP_200_OK)
 
@@ -281,6 +317,20 @@ def play_game(request):
                 ai.board = board
 
             result = ai.find_best_move(piece, depth)
+
+            # Save simulation if requested and user is authenticated
+            if request.data.get("save_simulation") and request.user.is_authenticated:
+                Simulation.objects.create(
+                    user=request.user,
+                    simulation_type="connect4",
+                    algorithm="connect4",
+                    nodes_explored=result.get("nodes_explored", 0),
+                    path_cost=0,
+                    execution_time=result.get("execution_time", 0),
+                    total_moves=result.get("move", 0),
+                    path_found=True,
+                    solved=False,
+                )
 
             return Response(result, status=status.HTTP_200_OK)
 

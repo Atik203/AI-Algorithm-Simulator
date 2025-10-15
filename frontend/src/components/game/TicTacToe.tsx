@@ -214,6 +214,7 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
         action: "play_game",
         first_player: "X",
         use_alpha_beta: algorithm === "alpha_beta",
+        save_simulation: true,
       });
 
       // Replay game history with animation

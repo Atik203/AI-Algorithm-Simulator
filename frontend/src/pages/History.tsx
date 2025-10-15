@@ -181,44 +181,50 @@ export default function History() {
               </Card>
             </motion.div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-4">
               {simulations.map((sim, index) => (
                 <motion.div
                   key={sim.id}
                   variants={fadeInUp}
                   custom={index}
-                  whileHover={{ y: -4 }}
+                  whileHover={{ x: 4 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
-                  <Card className="p-6 h-full flex flex-col">
-                    {/* Algorithm Name & Status */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="p-2 rounded-lg bg-primary/10">
+                  <Card className="p-6 hover:shadow-lg transition-shadow duration-200">
+                    <div className="flex items-center gap-6">
+                      {/* Icon */}
+                      <div className="flex-shrink-0">
+                        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-200 dark:border-blue-800">
                           {getSimulationTypeIcon(
                             sim.simulation_type || "pathfinding"
                           )}
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-1">
+                      </div>
+
+                      {/* Main Content */}
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                        {/* Algorithm & Type */}
+                        <div className="col-span-1">
+                          <h3 className="font-semibold text-base mb-1">
                             {sim.algorithm_display ||
                               algorithmNames[sim.algorithm] ||
                               sim.algorithm}
                           </h3>
-                          <p className="text-xs text-muted-foreground mb-1">
+                          <p className="text-sm text-muted-foreground">
                             {sim.simulation_type_display ||
                               simulationTypeNames[
                                 sim.simulation_type || "pathfinding"
                               ]}
                           </p>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 mt-2">
                             {sim.path_found || sim.solved ? (
-                              <div className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-                                <CheckCircle2 className="h-4 w-4" />
+                              <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                                <CheckCircle2 className="h-3 w-3" />
                                 <span>Success</span>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-1 text-sm text-red-600 dark:text-red-400">
-                                <XCircle className="h-4 w-4" />
+                              <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
+                                <XCircle className="h-3 w-3" />
                                 <span>
                                   {sim.simulation_type === "pathfinding"
                                     ? "No Path"
@@ -228,77 +234,87 @@ export default function History() {
                             )}
                           </div>
                         </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteSimulation(sim.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
 
-                    {/* Statistics */}
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Hash className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          Nodes Explored:
-                        </span>
-                        <span className="font-medium">
-                          {sim.nodes_explored}
-                        </span>
-                      </div>
-                      {sim.simulation_type === "pathfinding" && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">
-                            Path Cost:
-                          </span>
-                          <span className="font-medium">
-                            {sim.path_cost.toFixed(2)}
-                          </span>
+                        {/* Statistics Grid */}
+                        <div className="col-span-2 grid grid-cols-2 md:grid-cols-3 gap-3">
+                          <div>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                              <Hash className="h-3 w-3" />
+                              <span>Nodes</span>
+                            </div>
+                            <div className="text-sm font-semibold">
+                              {sim.nodes_explored}
+                            </div>
+                          </div>
+
+                          {sim.simulation_type === "pathfinding" && (
+                            <div>
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                                <TrendingUp className="h-3 w-3" />
+                                <span>Path Cost</span>
+                              </div>
+                              <div className="text-sm font-semibold">
+                                {sim.path_cost.toFixed(2)}
+                              </div>
+                            </div>
+                          )}
+
+                          {sim.total_moves !== undefined && (
+                            <div>
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                                <TrendingUp className="h-3 w-3" />
+                                <span>Moves</span>
+                              </div>
+                              <div className="text-sm font-semibold">
+                                {sim.total_moves}
+                              </div>
+                            </div>
+                          )}
+
+                          {sim.board_size !== undefined && (
+                            <div>
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                                <Grid3x3 className="h-3 w-3" />
+                                <span>Board</span>
+                              </div>
+                              <div className="text-sm font-semibold">
+                                {sim.board_size}x{sim.board_size}
+                              </div>
+                            </div>
+                          )}
+
+                          <div>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                              <Clock className="h-3 w-3" />
+                              <span>Time</span>
+                            </div>
+                            <div className="text-sm font-semibold">
+                              {sim.execution_time < 0.001
+                                ? `${(sim.execution_time * 1000000).toFixed(
+                                    0
+                                  )} μs`
+                                : sim.execution_time < 1
+                                ? `${(sim.execution_time * 1000).toFixed(2)} ms`
+                                : `${sim.execution_time.toFixed(3)}s`}
+                            </div>
+                          </div>
                         </div>
-                      )}
-                      {sim.total_moves !== undefined && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">
-                            Total Moves:
-                          </span>
-                          <span className="font-medium">{sim.total_moves}</span>
+
+                        {/* Date & Actions */}
+                        <div className="col-span-1 flex items-center justify-between md:justify-end gap-4">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            <span>{formatDate(sim.created_at)}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteSimulation(sim.id)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 flex-shrink-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                      )}
-                      {sim.board_size !== undefined && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Grid3x3 className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">
-                            Board Size:
-                          </span>
-                          <span className="font-medium">
-                            {sim.board_size}x{sim.board_size}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          Execution:
-                        </span>
-                        <span className="font-medium">
-                          {sim.execution_time < 0.001
-                            ? `${(sim.execution_time * 1000000).toFixed(0)} μs`
-                            : sim.execution_time < 1
-                            ? `${(sim.execution_time * 1000).toFixed(2)} ms`
-                            : `${sim.execution_time.toFixed(3)}s`}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm pt-2 border-t">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(sim.created_at)}
-                        </span>
                       </div>
                     </div>
                   </Card>
