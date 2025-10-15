@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](#-license)
 
-**Free & Open Source** | [GitHub Repository](https://github.com/Atik203/AI-Algorithm-Simulator)
+**Free & Open Source** | [Live Demo](https://ai-algorithm-simulator-web.vercel.app/) | [GitHub Repository](https://github.com/Atik203/AI-Algorithm-Simulator)
 
 ---
 
@@ -470,7 +470,7 @@ AI-Algorithm-Simulation/
 ## 🔗 Useful Links
 
 - **GitHub Repository**: https://github.com/Atik203/AI-Algorithm-Simulator
-- **Live Demo**: (Coming Soon)
+- **Live Demo**: https://ai-algorithm-simulator-web.vercel.app
 - **Documentation**: This README
 - **Issue Tracker**: https://github.com/Atik203/AI-Algorithm-Simulator/issues
 - **Discussions**: https://github.com/Atik203/AI-Algorithm-Simulator/discussions
