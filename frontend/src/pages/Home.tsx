@@ -203,8 +203,18 @@ export default function Home() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 size="lg"
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/simulator")}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg cursor-pointer text-lg px-8"
+              >
+                Try Simulator
+                <Sparkles className="ml-2 h-5 w-5" />
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                size="lg"
+                onClick={() => navigate("/login")}
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold shadow-lg cursor-pointer text-lg px-8"
               >
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />

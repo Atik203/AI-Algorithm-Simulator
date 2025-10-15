@@ -12,6 +12,7 @@ import { ThemeProvider } from "@components/ThemeProvider";
 import Home from "@pages/Home";
 import Login from "@pages/Login";
 import Register from "@pages/Register";
+import Simulator from "@pages/Simulator";
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
   {
     path: "/register",
     element: <Register />,
+  },
+  {
+    path: "/simulator",
+    element: <Simulator />,
   },
   {
     path: "*",

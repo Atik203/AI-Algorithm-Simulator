@@ -25,7 +25,7 @@ import { fadeInUp, staggerContainer } from "@lib/animations";
 // Validation schema
 const loginSchema = z.object({
   username: z.string().min(1, "Username or email is required"),
-  password: z.string().min(1, "Password is required"),
+  password: z.string().min(4, "Password must be at least 4 characters"),
   rememberMe: z.boolean().optional(),
 });
 
