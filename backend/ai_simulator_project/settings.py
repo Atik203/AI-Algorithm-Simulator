@@ -61,11 +61,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "ai_simulator_project.wsgi.application"
 
-# Database - SQLite for simplicity
+# Database - SQLite for simplicity with optional override via env var
+SQLITE_NAME = os.environ.get("DJANGO_DB_NAME")
+SQLITE_PATH = Path(SQLITE_NAME) if SQLITE_NAME else BASE_DIR / "db.sqlite3"
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": str(SQLITE_PATH),
     }
 }
 
