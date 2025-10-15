@@ -117,14 +117,21 @@ def get_algorithms(request):
     return Response(algorithms)
 
 
-class SimulationViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet for viewing saved simulations"""
+class SimulationViewSet(viewsets.ModelViewSet):
+    """ViewSet for viewing and managing saved simulations"""
 
     serializer_class = SimulationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Simulation.objects.filter(user=self.request.user)
+        """Return simulations for the current user, ordered by most recent"""
+        return Simulation.objects.filter(user=self.request.user).order_by("-created_at")
+
+    def list(self, request, *args, **kwargs):
+        """List all simulations for the current user"""
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         """Allow deleting simulations"""

@@ -55,11 +55,17 @@ export default function History() {
   const fetchSimulations = async () => {
     try {
       const response = await apiClient.get("/simulations/");
-      setSimulations(response.data);
+      // Ensure response.data is an array
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data.results || [];
+      setSimulations(data);
     } catch (error: any) {
+      console.error("Error fetching simulations:", error);
       toast.error("Failed to load simulations", {
         description: error.response?.data?.detail || "Please try again",
       });
+      setSimulations([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
