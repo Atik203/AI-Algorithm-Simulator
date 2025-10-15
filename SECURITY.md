@@ -20,6 +20,7 @@ The AI Algorithm Simulator team and community take security bugs seriously. We a
 Instead, please report them using one of the following methods:
 
 1. **GitHub Security Advisories** (Preferred)
+
    - Go to our [Security Advisories page](https://github.com/Atik203/AI-Algorithm-Simulator/security/advisories)
    - Click "Report a vulnerability"
    - Fill out the vulnerability report form
@@ -90,6 +91,7 @@ This information will help us triage your report more quickly.
 ### Production Recommendations
 
 - **Environment Configuration**
+
   ```bash
   DJANGO_DEBUG=False
   DJANGO_SECRET_KEY=<strong-random-secret>
@@ -97,12 +99,14 @@ This information will help us triage your report more quickly.
   ```
 
 - **Database Security**
+
   - Use PostgreSQL or MySQL for production
   - Enable database connection encryption
   - Use strong database passwords
   - Limit database user permissions
 
 - **Web Server Security**
+
   - Enable HTTPS with valid SSL certificates
   - Configure security headers (HSTS, CSP, etc.)
   - Use a reverse proxy (nginx, Apache)
@@ -187,7 +191,7 @@ We would like to thank the following individuals for their contributions to the 
 - Community members who have provided security feedback
 - Contributors who have improved our security practices
 
-*This list will be updated as we receive and address security reports.*
+_This list will be updated as we receive and address security reports._
 
 ## Additional Resources
 
