@@ -3,11 +3,21 @@
  * The heart of the AI Algorithm Simulator
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useTheme } from '@/components/ThemeProvider';
-import type { Position, GridState, AlgorithmStep, CellType } from '@/types/visualizer';
-import { CELL_COLORS, CELL_COLORS_DARK, GRID_CONFIGS } from '@/types/visualizer';
-import { positionsEqual } from '@/lib/visualizer-utils';
+import { useTheme } from "@/components/ThemeProvider";
+import { positionsEqual } from "@/lib/visualizer-utils";
+import type {
+  AlgorithmStep,
+  CellType,
+  GridSize,
+  GridState,
+  Position,
+} from "@/types/visualizer";
+import {
+  CELL_COLORS,
+  CELL_COLORS_DARK,
+  GRID_CONFIGS,
+} from "@/types/visualizer";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface AlgorithmVisualizerProps {
   gridState: GridState;
@@ -16,7 +26,7 @@ interface AlgorithmVisualizerProps {
   isPlaying: boolean;
   onCellClick?: (row: number, col: number) => void;
   onCellDrag?: (row: number, col: number) => void;
-  gridSize?: 'small' | 'medium' | 'large';
+  gridSize?: GridSize;
   showGrid?: boolean;
 }
 
@@ -27,7 +37,7 @@ export function AlgorithmVisualizer({
   isPlaying,
   onCellClick,
   onCellDrag,
-  gridSize = 'medium',
+  gridSize = "medium",
   showGrid = true,
 }: AlgorithmVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,18 +47,18 @@ export function AlgorithmVisualizer({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   const config = GRID_CONFIGS[gridSize];
-  const colors = theme === 'dark' ? CELL_COLORS_DARK : CELL_COLORS;
+  const colors = theme === "dark" ? CELL_COLORS_DARK : CELL_COLORS;
 
   // Calculate cell size based on container
   const calculateDimensions = useCallback(() => {
     if (containerRef.current) {
       const containerWidth = containerRef.current.clientWidth;
       const containerHeight = containerRef.current.clientHeight;
-      
+
       const maxCellWidth = Math.floor(containerWidth / gridState.cols);
       const maxCellHeight = Math.floor(containerHeight / gridState.rows);
       const cellSize = Math.min(maxCellWidth, maxCellHeight, config.cellSize);
-      
+
       setDimensions({
         width: cellSize * gridState.cols,
         height: cellSize * gridState.rows,
@@ -59,12 +69,12 @@ export function AlgorithmVisualizer({
   // Resize observer
   useEffect(() => {
     calculateDimensions();
-    
+
     const resizeObserver = new ResizeObserver(calculateDimensions);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
-    
+
     return () => resizeObserver.disconnect();
   }, [calculateDimensions]);
 
@@ -74,19 +84,19 @@ export function AlgorithmVisualizer({
       const pos = { row, col };
 
       // Check special positions
-      if (positionsEqual(pos, gridState.start)) return 'start';
-      if (positionsEqual(pos, gridState.goal)) return 'goal';
-      if (gridState.grid[row][col] === 1) return 'wall';
+      if (positionsEqual(pos, gridState.start)) return "start";
+      if (positionsEqual(pos, gridState.goal)) return "goal";
+      if (gridState.grid[row][col] === 1) return "wall";
 
       // Check algorithm steps up to current step
-      let cellType: CellType = 'empty';
+      let cellType: CellType = "empty";
       for (let i = 0; i <= Math.min(currentStep, steps.length - 1); i++) {
         const step = steps[i];
         if (positionsEqual(step.position, pos)) {
-          if (step.type === 'visit') cellType = 'visited';
-          else if (step.type === 'frontier') cellType = 'frontier';
-          else if (step.type === 'current') cellType = 'current';
-          else if (step.type === 'path') cellType = 'path';
+          if (step.type === "visit") cellType = "visited";
+          else if (step.type === "frontier") cellType = "frontier";
+          else if (step.type === "current") cellType = "current";
+          else if (step.type === "path") cellType = "path";
         }
       }
 
@@ -100,7 +110,7 @@ export function AlgorithmVisualizer({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const cellSize = dimensions.width / gridState.cols;
@@ -121,13 +131,13 @@ export function AlgorithmVisualizer({
 
         // Draw grid lines
         if (showGrid) {
-          ctx.strokeStyle = theme === 'dark' ? '#1e293b' : '#e2e8f0';
+          ctx.strokeStyle = theme === "dark" ? "#1e293b" : "#e2e8f0";
           ctx.lineWidth = 1;
           ctx.strokeRect(x, y, cellSize, cellSize);
         }
 
         // Add glow effect for current cell
-        if (cellType === 'current' && isPlaying) {
+        if (cellType === "current" && isPlaying) {
           ctx.shadowColor = colors.current;
           ctx.shadowBlur = 15;
           ctx.fillStyle = colors.current;
@@ -136,12 +146,12 @@ export function AlgorithmVisualizer({
         }
 
         // Add icons for start and goal
-        if (cellType === 'start' || cellType === 'goal') {
-          ctx.fillStyle = '#ffffff';
+        if (cellType === "start" || cellType === "goal") {
+          ctx.fillStyle = "#ffffff";
           ctx.font = `bold ${Math.floor(cellSize * 0.5)}px Arial`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          const icon = cellType === 'start' ? '▶' : '★';
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const icon = cellType === "start" ? "▶" : "★";
           ctx.fillText(icon, x + cellSize / 2, y + cellSize / 2);
         }
       }
@@ -181,7 +191,12 @@ export function AlgorithmVisualizer({
       const col = Math.floor(x / cellSize);
       const row = Math.floor(y / cellSize);
 
-      if (row >= 0 && row < gridState.rows && col >= 0 && col < gridState.cols) {
+      if (
+        row >= 0 &&
+        row < gridState.rows &&
+        col >= 0 &&
+        col < gridState.cols
+      ) {
         return { row, col };
       }
       return null;
@@ -249,7 +264,7 @@ export function AlgorithmVisualizer({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
-          imageRendering: 'crisp-edges',
+          imageRendering: "crisp-edges",
         }}
       />
 
@@ -258,12 +273,12 @@ export function AlgorithmVisualizer({
         <div className="text-xs font-semibold mb-2">Legend</div>
         <div className="space-y-1">
           {[
-            { type: 'start', label: 'Start' },
-            { type: 'goal', label: 'Goal' },
-            { type: 'wall', label: 'Wall' },
-            { type: 'visited', label: 'Visited' },
-            { type: 'frontier', label: 'Frontier' },
-            { type: 'path', label: 'Path' },
+            { type: "start", label: "Start" },
+            { type: "goal", label: "Goal" },
+            { type: "wall", label: "Wall" },
+            { type: "visited", label: "Visited" },
+            { type: "frontier", label: "Frontier" },
+            { type: "path", label: "Path" },
           ].map(({ type, label }) => (
             <div key={type} className="flex items-center gap-2">
               <div

@@ -293,23 +293,11 @@ class MazeSolver:
 - Algorithm info card
 ```
 
-### 3.3 Algorithm Comparison Table
-
-```typescript
-// File: frontend/src/components/AlgorithmComparison.tsx
-- Side-by-side comparison
-- Time complexity
-- Space complexity
-- Completeness
-- Optimality
-- Best use cases
-```
-
 ---
 
-## 💾 PHASE 5: BACKEND ENHANCEMENTS
+## 💾 PHASE 4: BACKEND ENHANCEMENTS
 
-### 5.1 Add Missing Algorithms
+### 4.1 Add Missing Algorithms
 
 **File:** `backend/algorithms_app/algorithms.py`
 
@@ -351,7 +339,7 @@ backend/
       rubiks_cube.py
 ```
 
-### 5.3 Enhanced Models
+### 4.3 Enhanced Models
 
 ```python
 # File: backend/algorithms_app/models.py
@@ -382,7 +370,7 @@ class UserAchievement(models.Model):
     earned_at = models.DateTimeField(auto_now_add=True)
 ```
 
-### 5.4 WebSocket Support (Optional)
+### 4.4 WebSocket Support (Optional)
 
 ```python
 # File: backend/algorithms_app/consumers.py
@@ -424,8 +412,6 @@ class AlgorithmConsumer(AsyncWebsocketConsumer):
 // File: frontend/src/pages/Profile.tsx
 - User info
 - Preferences (speed, colors, etc.)
-- API keys (for developers)
-- Export data
 ```
 
 ---
