@@ -1,0 +1,158 @@
+
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+**/.env
+
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+logs_env/
+backend/.venv/
+backend/venv/
+backend/env/
+
+# Django specific
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+static/
+
+# Django migrations (uncomment if you want to ignore them)
+# */migrations/
+# !*/migrations/__init__.py
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# =====================================
+# FRONTEND (VITE + REACT)
+# =====================================
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+dist/
+dist-ssr/
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# TypeScript
+*.tsbuildinfo
+frontend/*.tsbuildinfo
+
+# ESLint
+.eslintcache
+
+# Storybook
+.storybook/build
+
+# =====================================
+# PACKAGE MANAGERS
+# =====================================
+
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+yarn.lock
+
+# npm
+package-lock.json
+npm-debug.log
+.npm
+
+# pnpm
+pnpm-lock.yaml
+
+# =====================================
+# DATABASE & CACHE
+# =====================================
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+
+# Keep important config files
+!.gitignore
+!.gitattributes
+.github/
+!.vscode/settings.json
+!docker-compose.yml
+!Dockerfile
+!README.md
+!package.json
+!requirements.txt
+!manage.py
