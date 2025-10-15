@@ -457,8 +457,6 @@ class AlgorithmConsumer(AsyncWebsocketConsumer):
 14. Rubik's Cube
 15. TSP solver
 16. WebSocket support
-17. Leaderboards
-18. Achievements
 
 ---
 
