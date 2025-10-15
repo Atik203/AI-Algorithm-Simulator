@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Brain,
   CheckCircle2,
+  Clock,
   Code2,
   Flame,
   GitBranch,
@@ -39,34 +40,10 @@ const algorithms = {
       color: "from-green-500 to-emerald-500",
     },
     {
-      name: "Bidirectional BFS",
-      icon: Repeat,
-      description: "Simultaneous search from start and goal nodes",
-      color: "from-purple-500 to-pink-500",
-    },
-    {
       name: "Depth-First Search",
       icon: Layers,
       description: "Explores as far as possible before backtracking",
       color: "from-orange-500 to-red-500",
-    },
-    {
-      name: "Depth-Limited DFS",
-      icon: Layers,
-      description: "DFS with maximum depth constraint",
-      color: "from-red-500 to-rose-500",
-    },
-    {
-      name: "Iterative Deepening DFS",
-      icon: Route,
-      description: "Combines benefits of BFS and DFS with depth limits",
-      color: "from-indigo-500 to-purple-500",
-    },
-    {
-      name: "Uniform Cost Search",
-      icon: Network,
-      description: "Optimal search expanding least-cost nodes first",
-      color: "from-teal-500 to-cyan-500",
     },
     {
       name: "Dijkstra's Algorithm",
@@ -83,24 +60,6 @@ const algorithms = {
       color: "from-green-500 to-teal-500",
     },
     {
-      name: "Stochastic Hill Climbing",
-      icon: Shuffle,
-      description: "Random selection among uphill moves",
-      color: "from-blue-500 to-purple-500",
-    },
-    {
-      name: "Random Restart Hill Climbing",
-      icon: Repeat,
-      description: "Multiple hill climbing attempts from random starts",
-      color: "from-pink-500 to-rose-500",
-    },
-    {
-      name: "First-Choice Hill Climbing",
-      icon: Zap,
-      description: "Selects first better neighbor found",
-      color: "from-yellow-500 to-orange-500",
-    },
-    {
       name: "Simulated Annealing",
       icon: Flame,
       description: "Probabilistic technique accepting occasional worse moves",
@@ -114,6 +73,52 @@ const algorithms = {
     },
   ],
 };
+
+// Upcoming algorithms that are planned but not yet implemented
+const upcomingAlgorithms = [
+  {
+    name: "Bidirectional BFS",
+    icon: Repeat,
+    description: "Simultaneous search from start and goal nodes",
+    color: "from-purple-500 to-pink-500",
+  },
+  {
+    name: "Depth-Limited DFS",
+    icon: Layers,
+    description: "DFS with maximum depth constraint",
+    color: "from-red-500 to-rose-500",
+  },
+  {
+    name: "Iterative Deepening DFS",
+    icon: Route,
+    description: "Combines benefits of BFS and DFS with depth limits",
+    color: "from-indigo-500 to-purple-500",
+  },
+  {
+    name: "Uniform Cost Search",
+    icon: Network,
+    description: "Optimal search expanding least-cost nodes first",
+    color: "from-teal-500 to-cyan-500",
+  },
+  {
+    name: "Stochastic Hill Climbing",
+    icon: Shuffle,
+    description: "Random selection among uphill moves",
+    color: "from-blue-500 to-purple-500",
+  },
+  {
+    name: "Random Restart Hill Climbing",
+    icon: Repeat,
+    description: "Multiple hill climbing attempts from random starts",
+    color: "from-pink-500 to-rose-500",
+  },
+  {
+    name: "First-Choice Hill Climbing",
+    icon: Zap,
+    description: "Selects first better neighbor found",
+    color: "from-yellow-500 to-orange-500",
+  },
+];
 
 export default function Home() {
   const navigate = useNavigate();
@@ -205,8 +210,8 @@ export default function Home() {
             variants={fadeInUp}
             className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8"
           >
-            Interactive visualization and real-time execution of 15 powerful
-            search algorithms
+            Interactive visualization and real-time execution of 7 powerful
+            search algorithms, with 7 more coming soon
           </motion.p>
 
           <motion.div
@@ -278,8 +283,10 @@ export default function Home() {
             className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground"
           >
             <span className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              15 Algorithms
+              <CheckCircle2 className="h-4 w-4 text-green-500" />7 Algorithms
+            </span>
+            <span className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-amber-500" />7 More Coming
             </span>
             <span className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -374,6 +381,65 @@ export default function Home() {
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{algo.name}</h3>
                   <p className="text-sm text-muted-foreground">
+                    {algo.description}
+                  </p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Upcoming Algorithms Section */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={staggerContainer}
+          className="mb-16"
+        >
+          <motion.div
+            variants={fadeInUp}
+            className="flex items-center gap-3 mb-4 justify-center"
+          >
+            <Clock className="h-8 w-8 text-amber-500" />
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent">
+              Upcoming Algorithms
+            </h2>
+          </motion.div>
+
+          <motion.p
+            variants={fadeInUp}
+            className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto"
+          >
+            These algorithms are planned for future releases. Stay tuned for
+            updates!
+          </motion.p>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            {upcomingAlgorithms.map((algo, index) => (
+              <motion.div
+                key={algo.name}
+                variants={fadeInUp}
+                custom={index}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
+              >
+                <Card className="p-6 h-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-2 border-dashed border-amber-500/30 shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden">
+                  {/* "Coming Soon" Badge */}
+                  <div className="absolute top-2 right-2 px-2 py-1 bg-amber-500/20 border border-amber-500/30 rounded-full">
+                    <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                      Soon
+                    </span>
+                  </div>
+
+                  <div
+                    className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${algo.color} opacity-60 mb-4`}
+                  >
+                    <algo.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2 text-muted-foreground">
+                    {algo.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground/70">
                     {algo.description}
                   </p>
                 </Card>
