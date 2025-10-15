@@ -190,7 +190,7 @@ export default function Home() {
           initial="hidden"
           animate="visible"
           variants={staggerContainer}
-          className="text-center mb-16"
+          className="text-center mb-24"
         >
           {/* Welcome message for authenticated users */}
           {isAuthenticated && user && (
@@ -337,7 +337,7 @@ export default function Home() {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
-          className="mb-16"
+          className="mb-24"
         >
           <motion.div
             variants={fadeInUp}
@@ -419,7 +419,7 @@ export default function Home() {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
-          className="mb-16"
+          className="mb-24"
         >
           <motion.div
             variants={fadeInUp}
@@ -502,7 +502,7 @@ export default function Home() {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
-          className="mb-16"
+          className="mb-24"
         >
           <motion.div
             variants={fadeInUp}

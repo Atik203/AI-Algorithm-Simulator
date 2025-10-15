@@ -72,6 +72,8 @@ export default function Dashboard() {
     simulationTypeCounts: [],
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -177,6 +179,16 @@ export default function Dashboard() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  // Pagination calculations
+  const totalPages = Math.ceil(simulations.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentSimulations = simulations.slice(startIndex, endIndex);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
   };
 
   if (isLoading) {
@@ -368,61 +380,109 @@ export default function Dashboard() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {simulations.map((sim) => (
-                    <div
-                      key={sim.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                          {getSimulationTypeIcon(
-                            sim.simulation_type || "pathfinding"
-                          )}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium">
-                              {sim.algorithm_display ||
-                                algorithmNameMap[sim.algorithm] ||
-                                sim.algorithm}
-                            </p>
-                            <div
-                              className={`w-2 h-2 rounded-full ${
-                                sim.path_found || sim.solved
-                                  ? "bg-green-500"
-                                  : "bg-red-500"
-                              }`}
-                            />
+                <>
+                  <div className="space-y-4">
+                    {currentSimulations.map((sim) => (
+                      <div
+                        key={sim.id}
+                        className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            {getSimulationTypeIcon(
+                              sim.simulation_type || "pathfinding"
+                            )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {sim.simulation_type_display ||
-                              simulationTypeNames[
-                                sim.simulation_type || "pathfinding"
-                              ]}
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">
+                                {sim.algorithm_display ||
+                                  algorithmNameMap[sim.algorithm] ||
+                                  sim.algorithm}
+                              </p>
+                              <div
+                                className={`w-2 h-2 rounded-full ${
+                                  sim.path_found || sim.solved
+                                    ? "bg-green-500"
+                                    : "bg-red-500"
+                                }`}
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {sim.simulation_type_display ||
+                                simulationTypeNames[
+                                  sim.simulation_type || "pathfinding"
+                                ]}
+                            </p>
+                            <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+                              <Calendar className="h-3 w-3" />
+                              {formatDate(sim.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">
+                            {sim.nodes_explored} nodes
                           </p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-                            <Calendar className="h-3 w-3" />
-                            {formatDate(sim.created_at)}
+                          {sim.total_moves && (
+                            <p className="text-xs text-muted-foreground">
+                              {sim.total_moves} moves
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {formatTime(sim.execution_time)}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">
-                          {sim.nodes_explored} nodes
-                        </p>
-                        {sim.total_moves && (
-                          <p className="text-xs text-muted-foreground">
-                            {sim.total_moves} moves
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {formatTime(sim.execution_time)}
-                        </p>
+                    ))}
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+
+                      <div className="flex items-center gap-1">
+                        {Array.from(
+                          { length: totalPages },
+                          (_, i) => i + 1
+                        ).map((page) => (
+                          <Button
+                            key={page}
+                            variant={
+                              currentPage === page ? "default" : "outline"
+                            }
+                            size="sm"
+                            onClick={() => goToPage(page)}
+                            className={
+                              currentPage === page
+                                ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                                : ""
+                            }
+                          >
+                            {page}
+                          </Button>
+                        ))}
                       </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </Button>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>

@@ -91,6 +91,8 @@ export default function History() {
   const { isAuthenticated } = useAppSelector((state) => state.user);
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -133,6 +135,17 @@ export default function History() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
+  };
+
+  // Pagination calculations
+  const totalPages = Math.ceil(simulations.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentSimulations = simulations.slice(startIndex, endIndex);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (loading) {
@@ -181,146 +194,196 @@ export default function History() {
               </Card>
             </motion.div>
           ) : (
-            <div className="space-y-4">
-              {simulations.map((sim, index) => (
-                <motion.div
-                  key={sim.id}
-                  variants={fadeInUp}
-                  custom={index}
-                  whileHover={{ x: 4 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <Card className="p-6 hover:shadow-lg transition-shadow duration-200">
-                    <div className="flex items-center gap-6">
-                      {/* Icon */}
-                      <div className="flex-shrink-0">
-                        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-200 dark:border-blue-800">
-                          {getSimulationTypeIcon(
-                            sim.simulation_type || "pathfinding"
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Main Content */}
-                      <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                        {/* Algorithm & Type */}
-                        <div className="col-span-1">
-                          <h3 className="font-semibold text-base mb-1">
-                            {sim.algorithm_display ||
-                              algorithmNames[sim.algorithm] ||
-                              sim.algorithm}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {sim.simulation_type_display ||
-                              simulationTypeNames[
-                                sim.simulation_type || "pathfinding"
-                              ]}
-                          </p>
-                          <div className="flex items-center gap-2 mt-2">
-                            {sim.path_found || sim.solved ? (
-                              <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
-                                <CheckCircle2 className="h-3 w-3" />
-                                <span>Success</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
-                                <XCircle className="h-3 w-3" />
-                                <span>
-                                  {sim.simulation_type === "pathfinding"
-                                    ? "No Path"
-                                    : "Unsolved"}
-                                </span>
-                              </div>
+            <>
+              <div className="space-y-4">
+                {currentSimulations.map((sim, index) => (
+                  <motion.div
+                    key={sim.id}
+                    variants={fadeInUp}
+                    custom={index}
+                    whileHover={{ x: 4 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <Card className="p-6 hover:shadow-lg transition-shadow duration-200">
+                      <div className="flex items-center gap-6">
+                        {/* Icon */}
+                        <div className="flex-shrink-0">
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-200 dark:border-blue-800">
+                            {getSimulationTypeIcon(
+                              sim.simulation_type || "pathfinding"
                             )}
                           </div>
                         </div>
 
-                        {/* Statistics Grid */}
-                        <div className="col-span-2 grid grid-cols-2 md:grid-cols-3 gap-3">
-                          <div>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                              <Hash className="h-3 w-3" />
-                              <span>Nodes</span>
+                        {/* Main Content */}
+                        <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                          {/* Algorithm & Type */}
+                          <div className="col-span-1">
+                            <h3 className="font-semibold text-base mb-1">
+                              {sim.algorithm_display ||
+                                algorithmNames[sim.algorithm] ||
+                                sim.algorithm}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {sim.simulation_type_display ||
+                                simulationTypeNames[
+                                  sim.simulation_type || "pathfinding"
+                                ]}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              {sim.path_found || sim.solved ? (
+                                <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  <span>Success</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
+                                  <XCircle className="h-3 w-3" />
+                                  <span>
+                                    {sim.simulation_type === "pathfinding"
+                                      ? "No Path"
+                                      : "Unsolved"}
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                            <div className="text-sm font-semibold">
-                              {sim.nodes_explored}
+                          </div>
+
+                          {/* Statistics Grid */}
+                          <div className="col-span-2 grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <div>
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                                <Hash className="h-3 w-3" />
+                                <span>Nodes</span>
+                              </div>
+                              <div className="text-sm font-semibold">
+                                {sim.nodes_explored}
+                              </div>
+                            </div>
+
+                            {sim.simulation_type === "pathfinding" && (
+                              <div>
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                                  <TrendingUp className="h-3 w-3" />
+                                  <span>Path Cost</span>
+                                </div>
+                                <div className="text-sm font-semibold">
+                                  {sim.path_cost.toFixed(2)}
+                                </div>
+                              </div>
+                            )}
+
+                            {sim.total_moves !== undefined && (
+                              <div>
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                                  <TrendingUp className="h-3 w-3" />
+                                  <span>Moves</span>
+                                </div>
+                                <div className="text-sm font-semibold">
+                                  {sim.total_moves}
+                                </div>
+                              </div>
+                            )}
+
+                            {sim.board_size !== undefined && (
+                              <div>
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                                  <Grid3x3 className="h-3 w-3" />
+                                  <span>Board</span>
+                                </div>
+                                <div className="text-sm font-semibold">
+                                  {sim.board_size}x{sim.board_size}
+                                </div>
+                              </div>
+                            )}
+
+                            <div>
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                                <Clock className="h-3 w-3" />
+                                <span>Time</span>
+                              </div>
+                              <div className="text-sm font-semibold">
+                                {sim.execution_time < 0.001
+                                  ? `${(sim.execution_time * 1000000).toFixed(
+                                      0
+                                    )} μs`
+                                  : sim.execution_time < 1
+                                  ? `${(sim.execution_time * 1000).toFixed(
+                                      2
+                                    )} ms`
+                                  : `${sim.execution_time.toFixed(3)}s`}
+                              </div>
                             </div>
                           </div>
 
-                          {sim.simulation_type === "pathfinding" && (
-                            <div>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                                <TrendingUp className="h-3 w-3" />
-                                <span>Path Cost</span>
-                              </div>
-                              <div className="text-sm font-semibold">
-                                {sim.path_cost.toFixed(2)}
-                              </div>
+                          {/* Date & Actions */}
+                          <div className="col-span-1 flex items-center justify-between md:justify-end gap-4">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              <span>{formatDate(sim.created_at)}</span>
                             </div>
-                          )}
-
-                          {sim.total_moves !== undefined && (
-                            <div>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                                <TrendingUp className="h-3 w-3" />
-                                <span>Moves</span>
-                              </div>
-                              <div className="text-sm font-semibold">
-                                {sim.total_moves}
-                              </div>
-                            </div>
-                          )}
-
-                          {sim.board_size !== undefined && (
-                            <div>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                                <Grid3x3 className="h-3 w-3" />
-                                <span>Board</span>
-                              </div>
-                              <div className="text-sm font-semibold">
-                                {sim.board_size}x{sim.board_size}
-                              </div>
-                            </div>
-                          )}
-
-                          <div>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                              <Clock className="h-3 w-3" />
-                              <span>Time</span>
-                            </div>
-                            <div className="text-sm font-semibold">
-                              {sim.execution_time < 0.001
-                                ? `${(sim.execution_time * 1000000).toFixed(
-                                    0
-                                  )} μs`
-                                : sim.execution_time < 1
-                                ? `${(sim.execution_time * 1000).toFixed(2)} ms`
-                                : `${sim.execution_time.toFixed(3)}s`}
-                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => deleteSimulation(sim.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 flex-shrink-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-                        </div>
-
-                        {/* Date & Actions */}
-                        <div className="col-span-1 flex items-center justify-between md:justify-end gap-4">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            <span>{formatDate(sim.created_at)}</span>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteSimulation(sim.id)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 flex-shrink-0"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
                         </div>
                       </div>
-                    </div>
-                  </Card>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <motion.div
+                  variants={fadeInUp}
+                  className="flex items-center justify-center gap-2 mt-8"
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(page)}
+                          className={
+                            currentPage === page
+                              ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                              : ""
+                          }
+                        >
+                          {page}
+                        </Button>
+                      )
+                    )}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
                 </motion.div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </motion.div>
       </div>
