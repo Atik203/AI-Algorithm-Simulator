@@ -27,8 +27,6 @@ import {
 } from "@components/ui/card";
 import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
-import { useAppDispatch } from "@/store/hooks";
-import { setUser } from "@/store/slices/userSlice";
 
 // Validation schema
 const registerSchema = z
@@ -84,6 +82,7 @@ const passwordStrengthVariants = {
 
 export default function Register() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -134,12 +133,25 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const response = await authService.register({
+      const userData = await authService.register({
         username: data.username,
         email: data.email,
         password: data.password,
         password2: data.confirmPassword,
       });
+
+      // Get tokens from storage
+      const access = authService.getAccessToken();
+      const refresh = authService.getRefreshToken();
+      
+      // Update Redux store
+      if (access && refresh) {
+        dispatch(setUser({
+          user: userData,
+          access,
+          refresh,
+        }));
+      }
 
       toast.success("Account created successfully!", {
         description: "Welcome to AI Algorithm Simulator! 🎉",
@@ -148,14 +160,11 @@ export default function Register() {
 
       // Small delay for better UX
       setTimeout(() => {
-        navigate("/login");
+        navigate("/simulator");
       }, 1000);
     } catch (err: any) {
       toast.error("Registration failed", {
-        description:
-          err.response?.data?.message ||
-          err.message ||
-          "Please try again later",
+        description: err.message || "Please try again later",
       });
     } finally {
       setIsLoading(false);
@@ -192,10 +201,6 @@ export default function Register() {
             ease: "easeInOut",
           }}
         />
-      </div>
-
-      <div className="absolute top-4 right-4 z-10">
-        <ModeToggle />
       </div>
 
       <motion.div
