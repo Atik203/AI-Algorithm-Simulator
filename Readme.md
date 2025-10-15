@@ -1,53 +1,101 @@
-# 🧠 AI Search Algorithm Simulator
+# 🧠 AI Algorithm Simulator
 
-### Interactive Visualization of Informed and Local Search Algorithms using React.js + Django
+### Interactive Visualization Platform for Search & Optimization Algorithms
+
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Django](https://img.shields.io/badge/Django-5.x-092E20?logo=django)](https://www.djangoproject.com/)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
 
 ## 🚀 Project Overview
 
-**AI Search Algorithm Simulator** is an interactive web-based platform that visualizes and compares different **AI search algorithms** such as:
+**AI Algorithm Simulator** is a free, open-source interactive web platform that provides real-time visualization and execution of **7 powerful AI search and optimization algorithms**. The platform enables users to understand how different algorithms explore problem spaces, make decisions, and find solutions through step-by-step visual demonstrations.
 
-- A\* Search
-- BFS (Breadth-First Search)
-- DFS (Depth-First Search)
-- Hill Climbing
-- Simulated Annealing
-- Genetic Algorithm (optional)
+### ✨ Implemented Algorithms
 
-The project demonstrates how these algorithms explore a problem space, find optimal or near-optimal solutions, and can be applied in **pathfinding**, **puzzle solving**, and **optimization** contexts.
+#### **Classic Search Algorithms** (4)
 
-This project aligns with key topics from the **AI Lab curriculum**, including:  
-✅ Basics of Data Science with Python  
-✅ Informed Search Strategies  
-✅ Local Search & Variants  
-✅ Concept of Training and Validation  
-✅ A\* Search Algorithm
+1. **A\* Search** - Informed search using heuristics for optimal pathfinding
+
+   - Time: O(b^d) | Space: O(b^d) | Optimal: Yes (with admissible heuristic)
+   - Use Cases: GPS navigation, game AI, robotics
+
+2. **Breadth-First Search (BFS)** - Level-order traversal exploring all neighbors first
+
+   - Time: O(V + E) | Space: O(V) | Optimal: Yes (unweighted graphs)
+   - Use Cases: Shortest path in unweighted graphs, web crawling
+
+3. **Depth-First Search (DFS)** - Explores as far as possible before backtracking
+
+   - Time: O(V + E) | Space: O(h) | Optimal: No
+   - Use Cases: Maze solving, topological sorting, cycle detection
+
+4. **Dijkstra's Algorithm** - Shortest path algorithm for weighted graphs
+   - Time: O((V + E) log V) | Space: O(V) | Optimal: Yes (non-negative weights)
+   - Use Cases: Network routing, transportation systems
+
+#### **Heuristic & Optimization Algorithms** (3)
+
+5. **Hill Climbing** - Greedy local search climbing to peak
+
+   - Time: O(∞) | Space: O(1) | Optimal: No (local optima)
+   - Use Cases: Optimization problems, AI game playing
+
+6. **Simulated Annealing** - Probabilistic technique accepting occasional worse moves
+
+   - Time: O(∞) | Space: O(1) | Optimal: Probabilistically complete
+   - Use Cases: VLSI design, scheduling, neural networks
+
+7. **Genetic Algorithm** - Evolutionary optimization inspired by natural selection
+   - Time: O(g × n × f) | Space: O(n) | Optimal: Probabilistically complete
+   - Use Cases: Machine learning, scheduling, design optimization
+
+### 🔮 Coming Soon (7 More Algorithms)
+
+- Bidirectional BFS
+- Depth-Limited DFS
+- Iterative Deepening DFS
+- Uniform Cost Search
+- Stochastic Hill Climbing
+- Random Restart Hill Climbing
+- First-Choice Hill Climbing
 
 ---
 
-## 🎯 Project Objectives
+## 🎯 Key Features
 
-1. Implement multiple **AI search algorithms** in Python.
-2. Build a backend API with **Django REST Framework** to process simulation data.
-3. Create a **React.js + TypeScript frontend** for visualization and user interaction.
-4. Enable **real-time simulation** of algorithms (step-by-step visualization).
-5. Compare algorithm performance based on time, steps, and optimality.
+✅ **Real-time Visualization** - Watch algorithms explore the search space step-by-step  
+✅ **Interactive Grid** - Draw obstacles, set start/goal points, create custom mazes  
+✅ **Performance Metrics** - Track nodes explored, path cost, execution time  
+✅ **Multiple Heuristics** - Manhattan, Euclidean, Chebyshev, Octile distances  
+✅ **Speed Control** - Adjust playback speed from 0.1x to 10x  
+✅ **User Authentication** - Save and track your simulation history  
+✅ **Responsive Design** - Works seamlessly on desktop, tablet, and mobile  
+✅ **Dark Mode** - Eye-friendly theme switching
 
 ---
 
 ## 🏗️ System Architecture
 
-**Frontend (React.js + TypeScript)**
+### **Frontend Stack**
 
-- Dynamic grid/map for user input
-- Controls for algorithm selection, speed, and simulation start
-- Visual representation of nodes explored & final path
-- Statistics panel showing performance metrics
+- **React 18** with TypeScript for type safety
+- **Vite** for lightning-fast development
+- **Redux Toolkit** for state management
+- **Tailwind CSS** + **shadcn/ui** for modern UI
+- **Framer Motion** for smooth animations
+- **Axios** for API communication
 
-**Backend (Django + DRF)**
+### **Backend Stack**
 
-- API endpoints for executing algorithms
+- **Django 5.1** with Python 3.11+
+- **Django REST Framework** for RESTful APIs
+- **JWT Authentication** for secure access
+- **SQLite/PostgreSQL** for data persistence
+- **CORS** enabled for cross-origin requests
 - Core logic of A\*, BFS, DFS, Hill Climbing, etc.
 - Returns simulation steps and results to frontend
 

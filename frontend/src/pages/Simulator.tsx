@@ -467,7 +467,7 @@ export default function Simulator() {
 
             {/* Visualizer */}
             <Card className="p-4">
-              <div className="aspect-square max-h-[calc(100vh-300px)]">
+              <div className="aspect-square max-h-[calc(100vh-300px)] flex items-center justify-center">
                 <AlgorithmVisualizer
                   gridState={gridState}
                   steps={steps}

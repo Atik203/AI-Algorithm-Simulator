@@ -1,0 +1,39 @@
+AI ALGORITHM SIMULATOR
+======================
+
+SHORT DESCRIPTION:
+A free, open-source web platform for visualizing AI search and optimization algorithms 
+in real-time with interactive step-by-step demonstrations.
+
+IMPLEMENTED ALGORITHMS (7):
+
+Classic Search (4):
+• A* Search - Optimal pathfinding (O(b^d) time, admissible heuristic)
+• Breadth-First Search - Level-order traversal (O(V+E) time, optimal for unweighted)
+• Depth-First Search - Deep exploration (O(V+E) time, uses backtracking)
+• Dijkstra's Algorithm - Weighted shortest path (O((V+E)logV) time, optimal)
+
+Heuristic & Optimization (3):
+• Hill Climbing - Local search (O(1) space, greedy approach)
+• Simulated Annealing - Probabilistic optimization (accepts worse moves)
+• Genetic Algorithm - Evolutionary optimization (O(g×n×f) time)
+
+TECH STACK:
+Frontend: React 18, TypeScript, Vite, Redux Toolkit, Tailwind CSS
+Backend: Django 5.1, Python 3.11+, Django REST Framework, JWT Auth
+
+FEATURES:
+✓ Real-time visualization with playback control (0.1x - 10x speed)
+✓ Interactive grid editor with custom obstacles & mazes
+✓ Performance metrics (nodes explored, execution time, path cost)
+✓ Multiple heuristics (Manhattan, Euclidean, Chebyshev, Octile)
+✓ User authentication & simulation history
+✓ Responsive design with dark mode support
+
+COMING SOON (7 More):
+Bidirectional BFS, Depth-Limited DFS, Iterative Deepening DFS, 
+Uniform Cost Search, Stochastic Hill Climbing, Random Restart Hill Climbing,
+First-Choice Hill Climbing
+
+REPOSITORY: https://github.com/Atik203/AI-Algorithm-Simulator
+LICENSE: MIT (Free for educational and commercial use)
