@@ -32,24 +32,40 @@ const algorithms = {
       icon: Target,
       description: "Informed search using heuristics for optimal pathfinding",
       color: "from-blue-500 to-cyan-500",
+      timeComplexity: "O(b^d)",
+      spaceComplexity: "O(b^d)",
+      useCases: "GPS navigation, game AI, robotics",
+      optimal: "Yes (with admissible heuristic)",
     },
     {
       name: "Breadth-First Search",
       icon: GitBranch,
       description: "Level-order traversal exploring all neighbors first",
       color: "from-green-500 to-emerald-500",
+      timeComplexity: "O(V + E)",
+      spaceComplexity: "O(V)",
+      useCases: "Shortest path in unweighted graphs, web crawling",
+      optimal: "Yes (unweighted graphs)",
     },
     {
       name: "Depth-First Search",
       icon: Layers,
       description: "Explores as far as possible before backtracking",
       color: "from-orange-500 to-red-500",
+      timeComplexity: "O(V + E)",
+      spaceComplexity: "O(h)",
+      useCases: "Maze solving, topological sorting, cycle detection",
+      optimal: "No",
     },
     {
       name: "Dijkstra's Algorithm",
       icon: Route,
       description: "Shortest path algorithm for weighted graphs",
       color: "from-amber-500 to-orange-500",
+      timeComplexity: "O((V + E) log V)",
+      spaceComplexity: "O(V)",
+      useCases: "Network routing, transportation systems",
+      optimal: "Yes (non-negative weights)",
     },
   ],
   heuristic: [
@@ -58,18 +74,30 @@ const algorithms = {
       icon: TrendingUp,
       description: "Greedy local search climbing to peak",
       color: "from-green-500 to-teal-500",
+      timeComplexity: "O(∞)",
+      spaceComplexity: "O(1)",
+      useCases: "Optimization problems, AI game playing",
+      optimal: "No (local optima)",
     },
     {
       name: "Simulated Annealing",
       icon: Flame,
       description: "Probabilistic technique accepting occasional worse moves",
       color: "from-red-500 to-orange-500",
+      timeComplexity: "O(∞)",
+      spaceComplexity: "O(1)",
+      useCases: "VLSI design, scheduling, neural networks",
+      optimal: "Probabilistically complete",
     },
     {
       name: "Genetic Algorithm",
       icon: Brain,
       description: "Evolutionary optimization inspired by natural selection",
       color: "from-purple-500 to-indigo-500",
+      timeComplexity: "O(g × n × f)",
+      spaceComplexity: "O(n)",
+      useCases: "Machine learning, scheduling, design optimization",
+      optimal: "Probabilistically complete",
     },
   ],
 };
@@ -313,13 +341,20 @@ export default function Home() {
         >
           <motion.div
             variants={fadeInUp}
-            className="flex items-center gap-3 mb-8"
+            className="flex items-center gap-3 mb-4 justify-center"
           >
             <Code2 className="h-8 w-8 text-blue-500" />
             <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
               Classic Search Algorithms
             </h2>
           </motion.div>
+
+          <motion.p
+            variants={fadeInUp}
+            className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto"
+          >
+            Foundational algorithms for graph traversal and pathfinding problems
+          </motion.p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {algorithms.classic.map((algo, index) => (
@@ -330,16 +365,48 @@ export default function Home() {
                 whileHover={{ y: -8, transition: { duration: 0.2 } }}
                 className="cursor-pointer"
               >
-                <Card className="p-6 h-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                <Card className="p-6 h-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col">
                   <div
-                    className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${algo.color} mb-4`}
+                    className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${algo.color} mb-4 w-fit`}
                   >
                     <algo.icon className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{algo.name}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mb-4">
                     {algo.description}
                   </p>
+
+                  <div className="mt-auto space-y-2 pt-4 border-t border-border/50">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground font-medium">
+                        Time:
+                      </span>
+                      <code className="px-2 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded">
+                        {algo.timeComplexity}
+                      </code>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground font-medium">
+                        Space:
+                      </span>
+                      <code className="px-2 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded">
+                        {algo.spaceComplexity}
+                      </code>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground font-medium">
+                        Optimal:
+                      </span>
+                      <span className="font-semibold text-green-600 dark:text-green-400">
+                        {algo.optimal}
+                      </span>
+                    </div>
+                    <div className="pt-2">
+                      <p className="text-xs text-muted-foreground italic">
+                        {algo.useCases}
+                      </p>
+                    </div>
+                  </div>
                 </Card>
               </motion.div>
             ))}
@@ -356,13 +423,21 @@ export default function Home() {
         >
           <motion.div
             variants={fadeInUp}
-            className="flex items-center gap-3 mb-8"
+            className="flex items-center gap-3 mb-4 justify-center"
           >
             <Brain className="h-8 w-8 text-purple-500" />
             <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
               Heuristic & Optimization Algorithms
             </h2>
           </motion.div>
+
+          <motion.p
+            variants={fadeInUp}
+            className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto"
+          >
+            Advanced algorithms for optimization and probabilistic
+            problem-solving
+          </motion.p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
             {algorithms.heuristic.map((algo, index) => (
@@ -373,16 +448,48 @@ export default function Home() {
                 whileHover={{ y: -8, transition: { duration: 0.2 } }}
                 className="cursor-pointer"
               >
-                <Card className="p-6 h-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                <Card className="p-6 h-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col">
                   <div
-                    className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${algo.color} mb-4`}
+                    className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${algo.color} mb-4 w-fit`}
                   >
                     <algo.icon className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{algo.name}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mb-4">
                     {algo.description}
                   </p>
+
+                  <div className="mt-auto space-y-2 pt-4 border-t border-border/50">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground font-medium">
+                        Time:
+                      </span>
+                      <code className="px-2 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded">
+                        {algo.timeComplexity}
+                      </code>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground font-medium">
+                        Space:
+                      </span>
+                      <code className="px-2 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded">
+                        {algo.spaceComplexity}
+                      </code>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground font-medium">
+                        Optimal:
+                      </span>
+                      <span className="font-semibold text-amber-600 dark:text-amber-400">
+                        {algo.optimal}
+                      </span>
+                    </div>
+                    <div className="pt-2">
+                      <p className="text-xs text-muted-foreground italic">
+                        {algo.useCases}
+                      </p>
+                    </div>
+                  </div>
                 </Card>
               </motion.div>
             ))}
