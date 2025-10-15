@@ -157,6 +157,13 @@ def get_simulation_types(request):
             "icon": "sports_esports",
         },
         {
+            "id": "connect4",
+            "name": "Connect 4",
+            "description": "Classic Connect 4 game with AI opponent using Minimax",
+            "algorithms": ["minimax", "alpha_beta"],
+            "icon": "sports_esports",
+        },
+        {
             "id": "sudoku",
             "name": "Sudoku Solver",
             "description": "Solve Sudoku puzzles using backtracking",

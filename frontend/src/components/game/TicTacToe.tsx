@@ -4,18 +4,23 @@
  */
 
 import { playGame, type GamePlayResponse } from "@/api/api";
+import { AlgorithmInfoCard } from "@/components/common/AlgorithmInfoCard";
+import {
+  ConfigOption,
+  ConfigurationPanel,
+} from "@/components/common/ConfigurationPanel";
+import { StatisticsPanel } from "@/components/common/StatisticsPanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { motion } from "framer-motion";
-import { Brain, CircleDot, RotateCcw, User, X as XIcon } from "lucide-react";
+import {
+  Brain,
+  CircleDot,
+  Gamepad2,
+  RotateCcw,
+  Trophy,
+  X as XIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -41,6 +46,8 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
   const [winner, setWinner] = useState<Player | "draw" | null>(null);
   const [thinking, setThinking] = useState(false);
   const [moveEvaluations, setMoveEvaluations] = useState<any[] | null>(null);
+  const [moveCount, setMoveCount] = useState(0);
+  const [executionTime, setExecutionTime] = useState(0);
 
   // Check winner
   const checkWinner = (currentBoard: GameBoard): Player | "draw" | null => {
@@ -94,6 +101,7 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
   // Make AI move
   const makeAIMove = async (currentBoard: GameBoard, player: "X" | "O") => {
     setThinking(true);
+    const startTime = performance.now();
 
     try {
       const response: GamePlayResponse = await playGame({
@@ -104,6 +112,9 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
         use_alpha_beta: algorithm === "alpha_beta",
       });
 
+      const endTime = performance.now();
+      setExecutionTime(endTime - startTime);
+
       if (response.best_move) {
         // Type guard to ensure best_move is a tuple
         if (Array.isArray(response.best_move)) {
@@ -112,6 +123,7 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
           newBoard[row][col] = player;
 
           setBoard(newBoard);
+          setMoveCount(moveCount + 1);
           setMoveEvaluations(response.evaluations || null);
 
           const gameWinner = checkWinner(newBoard);
@@ -122,7 +134,9 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
             if (gameWinner === "draw") {
               toast.info("Game ended in a draw!");
             } else {
-              toast.success(`${gameWinner} wins!`);
+              toast.success(`${gameWinner} wins!`, {
+                icon: <Trophy className="w-4 h-4" />,
+              });
             }
           } else {
             setCurrentPlayer(player === "X" ? "O" : "X");
@@ -148,6 +162,7 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
     const newBoard = board.map((r) => [...r]);
     newBoard[row][col] = currentPlayer;
     setBoard(newBoard);
+    setMoveCount(moveCount + 1);
 
     const gameWinner = checkWinner(newBoard);
     if (gameWinner) {
@@ -157,7 +172,9 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
       if (gameWinner === "draw") {
         toast.info("Game ended in a draw!");
       } else {
-        toast.success(`${gameWinner} wins!`);
+        toast.success(`${gameWinner} wins!`, {
+          icon: <Trophy className="w-4 h-4" />,
+        });
       }
     } else {
       const nextPlayer = currentPlayer === "X" ? "O" : "X";
@@ -181,6 +198,9 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
     setGameOver(false);
     setWinner(null);
     setMoveEvaluations(null);
+    setMoveCount(0);
+    setExecutionTime(0);
+    toast.success("Game reset!");
   };
 
   // Start AI vs AI game
@@ -203,6 +223,7 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
           const move = response.game_history[i];
           setBoard(move.board);
           setCurrentPlayer(move.player === "X" ? "O" : "X");
+          setMoveCount(i + 1);
         }
 
         setWinner(response.winner || null);
@@ -211,7 +232,9 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
         if (response.winner === "draw") {
           toast.info("AI vs AI ended in a draw!");
         } else {
-          toast.success(`AI (${response.winner}) wins!`);
+          toast.success(`AI (${response.winner}) wins!`, {
+            icon: <Trophy className="w-4 h-4" />,
+          });
         }
       }
     } catch (error: any) {
@@ -221,150 +244,218 @@ export function TicTacToe({ onSave }: TicTacToeProps) {
     }
   };
 
+  // Configuration options
+  const configOptions: ConfigOption[] = [
+    {
+      id: "gameMode",
+      label: "Game Mode",
+      type: "select",
+      value: gameMode,
+      onChange: (value) => {
+        setGameMode(value as "pvai" | "aivai");
+        if (value === "pvai") {
+          resetGame();
+        }
+      },
+      options: [
+        { value: "pvai", label: "Player vs AI" },
+        { value: "aivai", label: "AI vs AI" },
+      ],
+      disabled: !gameOver && moveCount > 0,
+      description:
+        gameMode === "pvai"
+          ? "Play against the AI opponent"
+          : "Watch AI play against itself",
+    },
+    {
+      id: "algorithm",
+      label: "AI Algorithm",
+      type: "select",
+      value: algorithm,
+      onChange: (value) => setAlgorithm(value as "minimax" | "alpha_beta"),
+      options: [
+        { value: "minimax", label: "Minimax" },
+        { value: "alpha_beta", label: "Alpha-Beta Pruning" },
+      ],
+      description:
+        algorithm === "alpha_beta"
+          ? "Uses pruning for faster computation"
+          : "Classic Minimax algorithm",
+    },
+  ];
+
+  // Create statistics
+  const statistics = [
+    {
+      label: "Moves Made",
+      value: moveCount,
+      icon: CircleDot,
+      color: "text-blue-500",
+    },
+    {
+      label: "Current Player",
+      value: gameOver ? "Game Over" : currentPlayer,
+      icon: currentPlayer === "X" ? XIcon : CircleDot,
+      color: currentPlayer === "X" ? "text-blue-500" : "text-red-500",
+    },
+    {
+      label: "AI Evaluations",
+      value: moveEvaluations?.length || 0,
+      icon: Brain,
+      color: "text-purple-500",
+    },
+    {
+      label: "Last AI Time",
+      value: executionTime > 0 ? `${executionTime.toFixed(0)}ms` : "-",
+      icon: RotateCcw,
+      color: "text-green-500",
+    },
+  ];
+
   return (
-    <div className="space-y-4">
-      {/* Controls */}
-      <Card className="p-4">
+    <div className="space-y-6">
+      {/* Algorithm Info Card */}
+      <AlgorithmInfoCard
+        title="Tic-Tac-Toe AI"
+        description="Classic Tic-Tac-Toe game with perfect-play AI using Minimax algorithm with optional Alpha-Beta pruning. The AI evaluates all possible game states to make optimal moves."
+        icon={<Gamepad2 className="w-6 h-6 text-white" />}
+        goal="Get three in a row horizontally, vertically, or diagonally"
+        timeComplexity="O(b^d) where b=9, d≤9 (Alpha-Beta: O(b^(d/2)))"
+        spaceComplexity="O(d) for recursion stack"
+        features={[
+          "Minimax algorithm for perfect play",
+          "Alpha-Beta pruning optimization",
+          "Player vs AI and AI vs AI modes",
+          "Real-time move evaluation display",
+        ]}
+      />
+
+      {/* Configuration Panel */}
+      <ConfigurationPanel
+        title="Game Configuration"
+        options={configOptions}
+        columns={2}
+      />
+
+      {/* Game Board */}
+      <Card className="p-6">
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label>Game Mode</Label>
-              <Select
-                value={gameMode}
-                onValueChange={(value) =>
-                  setGameMode(value as "pvai" | "aivai")
-                }
-                disabled={!gameOver}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pvai">Player vs AI</SelectItem>
-                  <SelectItem value="aivai">AI vs AI</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Status Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {thinking ? (
+                <div className="flex items-center gap-2 text-blue-500">
+                  <Brain className="w-5 h-5 animate-pulse" />
+                  <span className="font-semibold">AI Thinking...</span>
+                </div>
+              ) : gameOver ? (
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-yellow-500" />
+                  <span className="font-semibold text-lg">
+                    {winner === "draw" ? "Game Draw!" : `${winner} Wins!`}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  {currentPlayer === "X" ? (
+                    <XIcon className="w-5 h-5 text-blue-500" />
+                  ) : (
+                    <CircleDot className="w-5 h-5 text-red-500" />
+                  )}
+                  <span className="font-semibold">
+                    {currentPlayer}'s Turn
+                    {gameMode === "pvai" && currentPlayer === "X" && " (You)"}
+                    {gameMode === "pvai" && currentPlayer === "O" && " (AI)"}
+                  </span>
+                </div>
+              )}
             </div>
-
-            <div>
-              <Label>Algorithm</Label>
-              <Select
-                value={algorithm}
-                onValueChange={(value) =>
-                  setAlgorithm(value as "minimax" | "alpha_beta")
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="minimax">Minimax</SelectItem>
-                  <SelectItem value="alpha_beta">Alpha-Beta Pruning</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-end gap-2">
-              <Button variant="outline" onClick={resetGame} className="flex-1">
-                <RotateCcw className="h-4 w-4 mr-2" />
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={resetGame}>
+                <RotateCcw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
               {gameMode === "aivai" && (
                 <Button
+                  size="sm"
                   onClick={startAIvsAI}
-                  disabled={!gameOver}
-                  className="flex-1"
+                  disabled={!gameOver && moveCount > 0}
                 >
-                  <Brain className="h-4 w-4 mr-2" />
-                  Start
+                  <Brain className="w-4 h-4 mr-2" />
+                  {!gameOver && moveCount > 0 ? "Playing..." : "Start AI vs AI"}
                 </Button>
               )}
             </div>
           </div>
 
-          {/* Status */}
-          <div className="flex items-center justify-between px-2 py-3 bg-secondary/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              {thinking ? (
-                <>
-                  <Brain className="h-5 w-5 animate-pulse text-blue-500" />
-                  <span className="font-medium">AI is thinking...</span>
-                </>
-              ) : gameOver ? (
-                <>
-                  <span className="text-2xl">
-                    {winner === "draw" ? "🤝" : winner === "X" ? "❌" : "⭕"}
-                  </span>
-                  <span className="font-medium">
-                    {winner === "draw" ? "Draw!" : `${winner} Wins!`}
-                  </span>
-                </>
-              ) : (
-                <>
-                  {currentPlayer === "X" ? (
-                    <XIcon className="h-5 w-5 text-blue-500" />
-                  ) : (
-                    <CircleDot className="h-5 w-5 text-red-500" />
-                  )}
-                  <span className="font-medium">Current: {currentPlayer}</span>
-                  {gameMode === "pvai" && currentPlayer === "X" && (
-                    <User className="h-4 w-4 ml-1" />
-                  )}
-                </>
+          {/* Tic-Tac-Toe Board */}
+          <div className="aspect-square max-w-md mx-auto">
+            <div className="grid grid-cols-3 gap-3 h-full">
+              {board.map((row, i) =>
+                row.map((cell, j) => (
+                  <motion.button
+                    key={`${i}-${j}`}
+                    className={`flex items-center justify-center text-5xl font-bold rounded-xl border-4 transition-all ${
+                      cell === ""
+                        ? "bg-secondary/20 border-secondary hover:bg-secondary/40"
+                        : cell === "X"
+                        ? "bg-blue-500/10 border-blue-500 text-blue-500"
+                        : "bg-red-500/10 border-red-500 text-red-500"
+                    } ${
+                      thinking || gameOver || cell !== ""
+                        ? "cursor-not-allowed"
+                        : gameMode === "pvai" && currentPlayer === "X"
+                        ? "cursor-pointer"
+                        : "cursor-not-allowed"
+                    }`}
+                    onClick={() => handleCellClick(i, j)}
+                    disabled={
+                      thinking ||
+                      gameOver ||
+                      cell !== "" ||
+                      gameMode === "aivai"
+                    }
+                    whileHover={{
+                      scale:
+                        cell === "" &&
+                        !thinking &&
+                        !gameOver &&
+                        gameMode === "pvai" &&
+                        currentPlayer === "X"
+                          ? 1.05
+                          : 1,
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {cell === "X" ? "❌" : cell === "O" ? "⭕" : ""}
+                  </motion.button>
+                ))
               )}
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Game Board */}
-      <Card className="p-8">
-        <div className="aspect-square max-w-md mx-auto">
-          <div className="grid grid-cols-3 gap-3 h-full">
-            {board.map((row, i) =>
-              row.map((cell, j) => (
-                <motion.button
-                  key={`${i}-${j}`}
-                  className={`flex items-center justify-center text-5xl font-bold rounded-xl border-4 transition-all ${
-                    cell === ""
-                      ? "bg-secondary/20 border-secondary hover:bg-secondary/40 hover:scale-105"
-                      : cell === "X"
-                      ? "bg-blue-500/10 border-blue-500 text-blue-500"
-                      : "bg-red-500/10 border-red-500 text-red-500"
-                  } ${
-                    thinking || gameOver
-                      ? "cursor-not-allowed"
-                      : "cursor-pointer"
-                  }`}
-                  onClick={() => handleCellClick(i, j)}
-                  disabled={thinking || gameOver || cell !== ""}
-                  whileHover={{
-                    scale: cell === "" && !thinking && !gameOver ? 1.05 : 1,
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {cell === "X" ? "❌" : cell === "O" ? "⭕" : ""}
-                </motion.button>
-              ))
-            )}
-          </div>
-        </div>
-      </Card>
+      {/* Real-time Statistics */}
+      <StatisticsPanel title="Game Statistics" statistics={statistics} />
 
       {/* Move Evaluations */}
       {moveEvaluations && moveEvaluations.length > 0 && (
-        <Card className="p-4">
-          <h3 className="font-semibold mb-3">AI Move Evaluations</h3>
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <Brain className="w-5 h-5" />
+            AI Move Evaluations
+          </h3>
           <div className="grid grid-cols-3 gap-2">
             {moveEvaluations.slice(0, 9).map((evaluation: any, idx: number) => (
               <div
                 key={idx}
-                className="p-2 bg-secondary/50 rounded text-center text-sm"
+                className="p-3 bg-secondary/50 rounded-lg text-center hover:bg-secondary transition-colors"
               >
-                <div className="font-medium">
-                  ({evaluation.row}, {evaluation.col})
+                <div className="font-medium text-sm">
+                  Position ({evaluation.row}, {evaluation.col})
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs text-muted-foreground mt-1">
                   Score: {evaluation.score}
                 </div>
               </div>

@@ -153,6 +153,7 @@ export default function Dashboard() {
       case "n-queens":
         return <Crown className="h-5 w-5" />;
       case "tic-tac-toe":
+      case "connect4":
         return <Gamepad2 className="h-5 w-5" />;
       case "tower-of-hanoi":
         return <Lightbulb className="h-5 w-5" />;

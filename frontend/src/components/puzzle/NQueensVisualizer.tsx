@@ -4,26 +4,25 @@
  */
 
 import { solvePuzzle, type PuzzleSolveResponse } from "@/api/api";
+import { AlgorithmInfoCard } from "@/components/common/AlgorithmInfoCard";
+import {
+  ConfigOption,
+  ConfigurationPanel,
+} from "@/components/common/ConfigurationPanel";
+import { ControlPanel } from "@/components/common/ControlPanel";
+import { StatisticsPanel } from "@/components/common/StatisticsPanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { motion } from "framer-motion";
 import {
+  Activity,
+  Clock,
   Crown,
   Hand,
-  Pause,
-  Play,
-  RotateCcw,
   Sparkles,
+  Target,
   Trash2,
+  TrendingUp,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -38,8 +37,9 @@ export function NQueensVisualizer({ onSave }: NQueensVisualizerProps) {
   const [solution, setSolution] = useState<PuzzleSolveResponse | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(300); // milliseconds per step
+  const [speed, setSpeed] = useState(1);
   const [manualMode, setManualMode] = useState(false);
+  const [executionTime, setExecutionTime] = useState(0);
   const [manualBoard, setManualBoard] = useState<number[][]>(() =>
     Array(8)
       .fill(0)
@@ -145,6 +145,7 @@ export function NQueensVisualizer({ onSave }: NQueensVisualizerProps) {
     setSolving(true);
     setCurrentStep(0);
     setIsPlaying(false);
+    const startTime = performance.now();
 
     try {
       const response = await solvePuzzle({
@@ -152,6 +153,9 @@ export function NQueensVisualizer({ onSave }: NQueensVisualizerProps) {
         board_size: boardSize,
         find_all: false, // Just find one solution
       });
+
+      const endTime = performance.now();
+      setExecutionTime(endTime - startTime);
 
       setSolution(response);
 
@@ -183,7 +187,7 @@ export function NQueensVisualizer({ onSave }: NQueensVisualizerProps) {
         }
         return prev + 1;
       });
-    }, speed);
+    }, 1000 / speed);
 
     return () => clearInterval(interval);
   }, [isPlaying, solution, speed]);
@@ -216,149 +220,203 @@ export function NQueensVisualizer({ onSave }: NQueensVisualizerProps) {
   const displayBoard = getCurrentBoard();
   const stepInfo = getCurrentStepInfo();
 
+  // Configuration options
+  const configOptions: ConfigOption[] = [
+    {
+      id: "boardSize",
+      label: "Board Size (N x N)",
+      type: "slider",
+      value: boardSize,
+      onChange: (value: number) => {
+        setBoardSize(value);
+        setSolution(null);
+        setCurrentStep(0);
+      },
+      min: 4,
+      max: 12,
+      step: 1,
+      disabled: solving || isPlaying,
+      description: `${boardSize}x${boardSize} chessboard with ${boardSize} queens`,
+    },
+  ];
+
+  // Create statistics
+  const statistics = solution
+    ? [
+        {
+          label: "Status",
+          value: solution.solved ? "✓ Solved" : "✗ No Solution",
+          icon: Target,
+          color: solution.solved ? "text-green-500" : "text-red-500",
+        },
+        {
+          label: "Solutions Found",
+          value: solution.solution_count || 0,
+          icon: Crown,
+          color: "text-yellow-500",
+        },
+        {
+          label: "States Explored",
+          value: solution.nodes_explored.toLocaleString(),
+          icon: Activity,
+          color: "text-blue-500",
+        },
+        {
+          label: "Execution Time",
+          value:
+            executionTime > 1000
+              ? `${(executionTime / 1000).toFixed(2)}s`
+              : `${executionTime.toFixed(0)}ms`,
+          icon: Clock,
+          color: "text-green-500",
+        },
+        {
+          label: "Current Step",
+          value: `${currentStep} / ${solution.steps?.length || 0}`,
+          icon: TrendingUp,
+          color: "text-purple-500",
+        },
+        {
+          label: "Board Size",
+          value: `${boardSize}x${boardSize}`,
+          icon: Target,
+          color: "text-orange-500",
+        },
+      ]
+    : [];
+
   return (
-    <div className="space-y-4">
-      {/* Controls */}
+    <div className="space-y-6">
+      {/* Algorithm Info Card */}
+      <AlgorithmInfoCard
+        title="N-Queens Problem"
+        description="Classic constraint satisfaction problem where N chess queens must be placed on an N×N chessboard so that no two queens threaten each other. Uses backtracking algorithm to systematically explore all possible configurations."
+        icon={<Crown className="w-6 h-6 text-white" />}
+        goal="Place N queens on N×N board with no conflicts (same row, column, or diagonal)"
+        timeComplexity="O(N!) - factorial time for backtracking"
+        spaceComplexity="O(N) - recursion stack and board state"
+        features={[
+          "Backtracking algorithm with constraint checking",
+          "Real-time visualization of queen placement",
+          "Manual mode for interactive puzzle solving",
+          "Step-by-step solution animation",
+          "Detects conflicts automatically",
+        ]}
+      />
+
+      {/* Configuration Panel */}
+      <ConfigurationPanel
+        title="Configuration"
+        options={configOptions}
+        columns={1}
+      />
+
+      {/* Mode Toggle and Actions */}
       <Card className="p-4">
         <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <Label>Board Size (N x N)</Label>
-              <Select
-                value={boardSize.toString()}
-                onValueChange={(value) => setBoardSize(parseInt(value))}
-                disabled={solving || isPlaying}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="4">4x4</SelectItem>
-                  <SelectItem value="5">5x5</SelectItem>
-                  <SelectItem value="6">6x6</SelectItem>
-                  <SelectItem value="7">7x7</SelectItem>
-                  <SelectItem value="8">8x8</SelectItem>
-                  <SelectItem value="9">9x9</SelectItem>
-                  <SelectItem value="10">10x10</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={manualMode ? "default" : "outline"}
+              onClick={toggleMode}
+              disabled={solving || isPlaying}
+              className="flex-1"
+            >
+              <Hand className="h-4 w-4 mr-2" />
+              {manualMode ? "Manual Mode Active" : "Switch to Manual"}
+            </Button>
 
-            <div className="flex gap-2 items-end">
+            {!manualMode && (
               <Button
                 size="sm"
-                variant={manualMode ? "default" : "outline"}
-                onClick={toggleMode}
+                onClick={solveNQueens}
                 disabled={solving || isPlaying}
+                className="flex-1"
               >
-                <Hand className="h-4 w-4 mr-2" />
-                {manualMode ? "Manual Mode" : "Auto Solve"}
+                <Sparkles className="h-4 w-4 mr-2" />
+                {solving ? "Solving..." : "Solve Puzzle"}
               </Button>
+            )}
 
-              {!manualMode && (
-                <Button
-                  size="sm"
-                  onClick={solveNQueens}
-                  disabled={solving || isPlaying}
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  {solving ? "Solving..." : "Solve"}
-                </Button>
-              )}
-
-              {manualMode && (
-                <Button size="sm" variant="outline" onClick={clearManualBoard}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear
-                </Button>
-              )}
-            </div>
+            {manualMode && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={clearManualBoard}
+                className="flex-1"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear Board
+              </Button>
+            )}
           </div>
 
           {manualMode && (
             <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
               <p className="text-sm text-blue-900 dark:text-blue-100">
-                <strong>Manual Mode:</strong> Click on squares to place or
-                remove queens. Invalid placements will be blocked.
+                <strong>Manual Mode:</strong> Click squares to place/remove
+                queens. Invalid placements are automatically blocked. Place all{" "}
+                {boardSize} queens without conflicts to solve!
               </p>
             </div>
           )}
-
-          {/* Playback Controls */}
-          {!manualMode &&
-            solution &&
-            solution.steps &&
-            solution.steps.length > 0 && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  disabled={currentStep >= solution.steps.length - 1}
-                >
-                  {isPlaying ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4" />
-                  )}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    setCurrentStep(0);
-                    setIsPlaying(false);
-                  }}
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-
-                <div className="flex-1">
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Step: </span>
-                    {currentStep} / {solution.steps.length - 1}
-                    {stepInfo && (
-                      <span className="ml-2 text-xs px-2 py-1 rounded-full bg-secondary">
-                        {stepInfo.type === "placing" && "Placing Queen"}
-                        {stepInfo.type === "backtracking" && "Backtracking"}
-                        {stepInfo.type === "trying" && "Trying Position"}
-                        {stepInfo.type === "solution" && "✓ Solution Found"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="h-2 bg-secondary rounded-full overflow-hidden mt-1">
-                    <motion.div
-                      className="h-full bg-primary"
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${
-                          (currentStep / (solution.steps.length - 1)) * 100
-                        }%`,
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="w-48">
-                  <Label className="text-xs mb-2 block">Speed</Label>
-                  <Slider
-                    value={[speed]}
-                    onValueChange={(value) => setSpeed(value[0])}
-                    min={50}
-                    max={1000}
-                    step={50}
-                    className="cursor-pointer"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                    <span>Fast</span>
-                    <span>Slow</span>
-                  </div>
-                </div>
-              </div>
-            )}
         </div>
       </Card>
+
+      {/* Control Panel */}
+      {!manualMode &&
+        solution &&
+        solution.steps &&
+        solution.steps.length > 0 && (
+          <ControlPanel
+            isPlaying={isPlaying}
+            isPaused={!isPlaying && currentStep > 0}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onReset={() => {
+              setCurrentStep(0);
+              setIsPlaying(false);
+              toast.success("Reset to start");
+            }}
+            onStepForward={() => {
+              if (currentStep < solution.steps.length - 1) {
+                setCurrentStep(currentStep + 1);
+              }
+            }}
+            onStepBackward={() => {
+              if (currentStep > 0) {
+                setCurrentStep(currentStep - 1);
+              }
+            }}
+            speed={speed}
+            onSpeedChange={setSpeed}
+            currentStep={currentStep}
+            totalSteps={solution.steps.length - 1}
+            disabled={solving}
+            showStepControls={true}
+            showSpeedControl={true}
+          />
+        )}
+
+      {/* Step Info Badge */}
+      {!manualMode && stepInfo && (
+        <Card className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30">
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-sm font-semibold">Current Action:</span>
+            <span className="px-3 py-1 rounded-full bg-white dark:bg-gray-800 text-sm font-medium">
+              {stepInfo.type === "placing" && "🔹 Placing Queen"}
+              {stepInfo.type === "backtracking" && "🔙 Backtracking"}
+              {stepInfo.type === "trying" && "🔍 Trying Position"}
+              {stepInfo.type === "solution" && "✅ Solution Found!"}
+            </span>
+            {stepInfo.row !== undefined && stepInfo.col !== undefined && (
+              <span className="text-sm text-muted-foreground">
+                at ({stepInfo.row + 1}, {stepInfo.col + 1})
+              </span>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Chessboard */}
       <Card className="p-8">
@@ -417,42 +475,24 @@ export function NQueensVisualizer({ onSave }: NQueensVisualizerProps) {
             )}
           </div>
         </div>
-      </Card>
 
-      {/* Statistics */}
-      {solution && (
-        <Card className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-muted-foreground">Status</div>
-              <div className="text-lg font-semibold">
-                {solution.solved ? "✓ Solved" : "✗ No Solution"}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">
-                Solutions Found
-              </div>
-              <div className="text-lg font-semibold">
-                {solution.solution_count || 0}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">
-                States Explored
-              </div>
-              <div className="text-lg font-semibold">
-                {solution.nodes_explored}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Board Size</div>
-              <div className="text-lg font-semibold">
-                {boardSize}x{boardSize}
-              </div>
+        {/* Manual Mode Stats */}
+        {manualMode && (
+          <div className="mt-6 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+              <Crown className="w-5 h-5" />
+              <span className="font-semibold">
+                Queens Placed:{" "}
+                {manualBoard.flat().filter((c) => c === 1).length} / {boardSize}
+              </span>
             </div>
           </div>
-        </Card>
+        )}
+      </Card>
+
+      {/* Real-time Statistics */}
+      {!manualMode && solution && statistics.length > 0 && (
+        <StatisticsPanel title="Real-time Statistics" statistics={statistics} />
       )}
     </div>
   );

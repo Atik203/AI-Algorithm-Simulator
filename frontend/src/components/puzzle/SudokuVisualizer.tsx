@@ -4,13 +4,22 @@
  */
 
 import { solvePuzzle, type PuzzleSolveResponse } from "@/api/api";
+import { AlgorithmInfoCard } from "@/components/common/AlgorithmInfoCard";
+import { ControlPanel } from "@/components/common/ControlPanel";
+import { StatisticsPanel } from "@/components/common/StatisticsPanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { motion } from "framer-motion";
-import { Pause, Play, RotateCcw, Sparkles, Trash2 } from "lucide-react";
+import {
+  Activity,
+  Clock,
+  Grid3x3,
+  Hash,
+  Sparkles,
+  Target,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -65,7 +74,8 @@ export function SudokuVisualizer({ onSave }: SudokuVisualizerProps) {
   const [solution, setSolution] = useState<PuzzleSolveResponse | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(150); // milliseconds per step
+  const [speed, setSpeed] = useState(1);
+  const [executionTime, setExecutionTime] = useState(0);
   const [focusedCell, setFocusedCell] = useState<{
     row: number;
     col: number;
@@ -120,12 +130,16 @@ export function SudokuVisualizer({ onSave }: SudokuVisualizerProps) {
     setSolving(true);
     setCurrentStep(0);
     setIsPlaying(false);
+    const startTime = performance.now();
 
     try {
       const response = await solvePuzzle({
         puzzle_type: "sudoku",
         board: board,
       });
+
+      const endTime = performance.now();
+      setExecutionTime(endTime - startTime);
 
       setSolution(response);
 
@@ -159,7 +173,7 @@ export function SudokuVisualizer({ onSave }: SudokuVisualizerProps) {
         }
         return prev + 1;
       });
-    }, speed);
+    }, 1000 / speed);
 
     return () => clearInterval(interval);
   }, [isPlaying, solution, speed]);
@@ -183,136 +197,168 @@ export function SudokuVisualizer({ onSave }: SudokuVisualizerProps) {
   const displayBoard = getCurrentBoard();
   const stepInfo = getCurrentStepInfo();
 
+  // Create statistics
+  const statistics = solution
+    ? [
+        {
+          label: "Status",
+          value: solution.solved ? "✓ Solved" : "✗ No Solution",
+          icon: Target,
+          color: solution.solved ? "text-green-500" : "text-red-500",
+        },
+        {
+          label: "States Explored",
+          value: solution.nodes_explored.toLocaleString(),
+          icon: Activity,
+          color: "text-blue-500",
+        },
+        {
+          label: "Initial Clues",
+          value: initialBoard.flat().filter((cell) => cell !== 0).length,
+          icon: Hash,
+          color: "text-purple-500",
+        },
+        {
+          label: "Execution Time",
+          value:
+            executionTime > 1000
+              ? `${(executionTime / 1000).toFixed(2)}s`
+              : `${executionTime.toFixed(0)}ms`,
+          icon: Clock,
+          color: "text-green-500",
+        },
+      ]
+    : [];
+
   return (
-    <div className="space-y-4">
-      {/* Controls */}
+    <div className="space-y-6">
+      {/* Algorithm Info Card */}
+      <AlgorithmInfoCard
+        title="Sudoku Solver"
+        description="Classic 9x9 Sudoku puzzle solver using backtracking algorithm with constraint propagation. Each row, column, and 3x3 box must contain digits 1-9 without repetition. The algorithm systematically tries values and backtracks when conflicts are detected."
+        icon={<Grid3x3 className="w-6 h-6 text-white" />}
+        goal="Fill 9x9 grid so each row, column, and 3x3 box contains 1-9"
+        timeComplexity="O(9^(n*n)) worst case, much faster with pruning"
+        spaceComplexity="O(n*n) for the board and recursion stack"
+        features={[
+          "Backtracking with constraint propagation",
+          "Instant conflict detection",
+          "Step-by-step solution visualization",
+          "Sample puzzles (Easy & Medium)",
+          "Manual input support",
+        ]}
+      />
+
+      {/* Sample Puzzles and Actions */}
       <Card className="p-4">
         <div className="space-y-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div>
-              <Label>Sample Puzzles</Label>
-              <div className="flex gap-2 mt-2">
-                {SAMPLE_PUZZLES.map((puzzle, idx) => (
-                  <Button
-                    key={idx}
-                    size="sm"
-                    variant="outline"
-                    onClick={() => loadSamplePuzzle(idx)}
-                    disabled={solving || isPlaying}
-                  >
-                    {puzzle.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-2 items-end ml-auto">
-              <Button
-                size="sm"
-                onClick={solveSudoku}
-                disabled={solving || isPlaying}
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {solving ? "Solving..." : "Solve"}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={clearBoard}
-                disabled={solving || isPlaying}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear
-              </Button>
+          <div>
+            <h4 className="font-semibold mb-2 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Sample Puzzles
+            </h4>
+            <div className="flex gap-2">
+              {SAMPLE_PUZZLES.map((puzzle, idx) => (
+                <Button
+                  key={idx}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => loadSamplePuzzle(idx)}
+                  disabled={solving || isPlaying}
+                  className="flex-1"
+                >
+                  {puzzle.name}
+                </Button>
+              ))}
             </div>
           </div>
 
-          {/* Playback Controls */}
-          {solution && solution.steps && solution.steps.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsPlaying(!isPlaying)}
-                disabled={currentStep >= solution.steps.length - 1}
-              >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setCurrentStep(0);
-                  setIsPlaying(false);
-                }}
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-
-              <div className="flex-1">
-                <div className="text-sm">
-                  <span className="text-muted-foreground">Step: </span>
-                  {currentStep} / {solution.steps.length - 1}
-                  {stepInfo && (
-                    <span className="ml-2 text-xs px-2 py-1 rounded-full bg-secondary">
-                      {stepInfo.type === "placing" &&
-                        `Placing ${stepInfo.value}`}
-                      {stepInfo.type === "backtracking" && "Backtracking"}
-                      {stepInfo.type === "trying" && `Trying ${stepInfo.value}`}
-                      {stepInfo.type === "solution" && "✓ Solution Found"}
-                    </span>
-                  )}
-                </div>
-                <div className="h-2 bg-secondary rounded-full overflow-hidden mt-1">
-                  <motion.div
-                    className="h-full bg-primary"
-                    initial={{ width: 0 }}
-                    animate={{
-                      width: `${
-                        (currentStep / (solution.steps.length - 1)) * 100
-                      }%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="w-48">
-                <Label className="text-xs mb-2 block">Speed</Label>
-                <Slider
-                  value={[speed]}
-                  onValueChange={(value) => setSpeed(value[0])}
-                  min={50}
-                  max={500}
-                  step={50}
-                  className="cursor-pointer"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  <span>Fast</span>
-                  <span>Slow</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <div className="flex gap-2">
+            <Button
+              onClick={solveSudoku}
+              disabled={solving || isPlaying}
+              className="flex-1"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              {solving ? "Solving..." : "Solve Puzzle"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={clearBoard}
+              disabled={solving || isPlaying}
+              className="flex-1"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear Board
+            </Button>
+          </div>
 
           <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
             <p className="text-sm text-blue-900 dark:text-blue-100">
-              <strong>Tip:</strong> Click on cells to enter numbers (1-9), or
-              load a sample puzzle. Click Solve to see the backtracking
-              algorithm in action!
+              <strong>Tip:</strong> Click cells to enter numbers (1-9) or load a
+              sample puzzle. Click Solve to watch the backtracking algorithm
+              find the solution!
             </p>
           </div>
         </div>
       </Card>
 
+      {/* Control Panel */}
+      {solution && solution.steps && solution.steps.length > 0 && (
+        <ControlPanel
+          isPlaying={isPlaying}
+          isPaused={!isPlaying && currentStep > 0}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onReset={() => {
+            setCurrentStep(0);
+            setIsPlaying(false);
+            toast.success("Reset to start");
+          }}
+          onStepForward={() => {
+            if (currentStep < solution.steps.length - 1) {
+              setCurrentStep(currentStep + 1);
+            }
+          }}
+          onStepBackward={() => {
+            if (currentStep > 0) {
+              setCurrentStep(currentStep - 1);
+            }
+          }}
+          speed={speed}
+          onSpeedChange={setSpeed}
+          currentStep={currentStep}
+          totalSteps={solution.steps.length - 1}
+          disabled={solving}
+          showStepControls={true}
+          showSpeedControl={true}
+        />
+      )}
+
+      {/* Step Info Badge */}
+      {stepInfo && (
+        <Card className="p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/30 dark:to-blue-950/30">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold">Current Action:</span>
+            <span className="px-3 py-1 rounded-full bg-white dark:bg-gray-800 text-sm font-medium">
+              {stepInfo.type === "placing" && `🔹 Placing ${stepInfo.value}`}
+              {stepInfo.type === "backtracking" && "🔙 Backtracking"}
+              {stepInfo.type === "trying" && `🔍 Trying ${stepInfo.value}`}
+              {stepInfo.type === "solution" && "✅ Solution Found!"}
+            </span>
+            {stepInfo.row !== undefined && stepInfo.col !== undefined && (
+              <span className="text-sm text-muted-foreground">
+                at Cell ({stepInfo.row + 1}, {stepInfo.col + 1})
+              </span>
+            )}
+          </div>
+        </Card>
+      )}
+
       {/* Sudoku Grid */}
       <Card className="p-8">
         <div className="max-w-2xl mx-auto">
-          <div className="grid grid-cols-9 gap-0 border-4 border-gray-800 dark:border-gray-200">
+          <div className="grid grid-cols-9 gap-0 border-4 border-gray-800 dark:border-gray-200 rounded-lg overflow-hidden">
             {displayBoard.map((row: number[], i: number) =>
               row.map((cell: number, j: number) => {
                 const isInitial = initialBoard[i][j] !== 0;
@@ -329,29 +375,28 @@ export function SudokuVisualizer({ onSave }: SudokuVisualizerProps) {
                       ${
                         isThickTop && i !== 0
                           ? "border-t-2 border-t-gray-800 dark:border-t-gray-200"
-                          : "border-t border-t-gray-300"
+                          : "border-t border-t-gray-300 dark:border-t-gray-700"
                       }
                       ${
                         isThickLeft && j !== 0
                           ? "border-l-2 border-l-gray-800 dark:border-l-gray-200"
-                          : "border-l border-l-gray-300"
+                          : "border-l border-l-gray-300 dark:border-l-gray-700"
                       }
-                      ${i === 8 ? "" : ""}
-                      ${j === 8 ? "" : ""}
                       ${
                         isHighlighted
-                          ? "bg-blue-200 dark:bg-blue-900"
+                          ? "bg-blue-200 dark:bg-blue-900 animate-pulse"
                           : "bg-white dark:bg-gray-900"
                       }
                       ${
                         !isInitial && !solution
-                          ? "hover:bg-gray-100 dark:hover:bg-gray-800"
+                          ? "hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
                           : ""
                       }
                     `}
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: (i * 9 + j) * 0.005 }}
+                    whileHover={!isInitial && !solution ? { scale: 1.05 } : {}}
                   >
                     {cell !== 0 ? (
                       <span
@@ -368,7 +413,7 @@ export function SudokuVisualizer({ onSave }: SudokuVisualizerProps) {
                         <Input
                           type="text"
                           maxLength={1}
-                          className="w-full h-full text-center text-xl border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                          className="w-full h-full text-center text-xl border-0 bg-transparent p-0 focus-visible:ring-2 focus-visible:ring-blue-500"
                           value=""
                           onChange={(e) =>
                             handleCellChange(i, j, e.target.value)
@@ -384,38 +429,28 @@ export function SudokuVisualizer({ onSave }: SudokuVisualizerProps) {
             )}
           </div>
         </div>
+
+        {/* Solution Status */}
+        {solution && (
+          <div className="mt-6 text-center">
+            {solution.solved ? (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+                <span className="text-2xl">✓</span>
+                <span className="font-semibold">Sudoku Solved!</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full">
+                <span className="text-2xl">⚠</span>
+                <span className="font-semibold">No Solution Found</span>
+              </div>
+            )}
+          </div>
+        )}
       </Card>
 
-      {/* Statistics */}
-      {solution && (
-        <Card className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-muted-foreground">Status</div>
-              <div className="text-lg font-semibold">
-                {solution.solved ? "✓ Solved" : "✗ No Solution"}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">
-                States Explored
-              </div>
-              <div className="text-lg font-semibold">
-                {solution.nodes_explored}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Algorithm</div>
-              <div className="text-lg font-semibold">Backtracking</div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Initial Clues</div>
-              <div className="text-lg font-semibold">
-                {initialBoard.flat().filter((cell) => cell !== 0).length}
-              </div>
-            </div>
-          </div>
-        </Card>
+      {/* Real-time Statistics */}
+      {solution && statistics.length > 0 && (
+        <StatisticsPanel title="Real-time Statistics" statistics={statistics} />
       )}
     </div>
   );

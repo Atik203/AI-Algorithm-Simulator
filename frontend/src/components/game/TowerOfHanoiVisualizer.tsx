@@ -4,19 +4,16 @@
  */
 
 import { playGame, type GamePlayResponse } from "@/api/api";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { AlgorithmInfoCard } from "@/components/common/AlgorithmInfoCard";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
+  ConfigurationPanel,
+  type ConfigOption,
+} from "@/components/common/ConfigurationPanel";
+import { ControlPanel } from "@/components/common/ControlPanel";
+import { StatisticsPanel } from "@/components/common/StatisticsPanel";
+import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Pause, Play, RotateCcw, Sparkles } from "lucide-react";
+import { BookOpen, CheckCircle2, Clock, Layers } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -34,7 +31,8 @@ export function TowerOfHanoiVisualizer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(800);
   const [towers, setTowers] = useState<number[][]>([[], [], []]);
-
+  const [executionTime, setExecutionTime] = useState(0);
+  const [moveCount, setMoveCount] = useState(0);
   // Initialize towers
   useEffect(() => {
     initializeTowers();
@@ -54,13 +52,17 @@ export function TowerOfHanoiVisualizer({
     setCurrentStep(0);
     setIsPlaying(false);
 
+    const startTime = performance.now();
     try {
       const response = await playGame({
         game_type: "tower-of-hanoi",
         n_disks: numDisks,
       });
 
+      const endTime = performance.now();
+      setExecutionTime(endTime - startTime);
       setSolution(response);
+      setMoveCount(response.total_moves || 0);
 
       if (response.steps && response.steps.length > 0) {
         toast.success("Solution found!", {
@@ -148,130 +150,144 @@ export function TowerOfHanoiVisualizer({
     return colors[size - 1] || "bg-gray-500";
   };
 
+  // Configuration options
+  const configOptions: ConfigOption[] = [
+    {
+      id: "numDisks",
+      label: "Number of Disks",
+      type: "select",
+      value: numDisks.toString(),
+      options: [
+        { label: "3 Disks", value: "3" },
+        { label: "4 Disks", value: "4" },
+        { label: "5 Disks", value: "5" },
+        { label: "6 Disks", value: "6" },
+        { label: "7 Disks", value: "7" },
+        { label: "8 Disks", value: "8" },
+      ],
+      onChange: (value) => setNumDisks(parseInt(value)),
+      disabled: solving || isPlaying,
+      description: "Select the number of disks to solve",
+    },
+  ];
+
+  // Statistics
+  const statistics: {
+    icon: any;
+    label: string;
+    value: string | number;
+    color: string;
+  }[] = [
+    {
+      icon: CheckCircle2,
+      label: "Status",
+      value:
+        solution?.steps && solution.steps.length > 0
+          ? "Complete"
+          : "In Progress",
+      color:
+        solution?.steps && solution.steps.length > 0
+          ? "text-green-600"
+          : "text-yellow-600",
+    },
+    {
+      icon: Layers,
+      label: "Total Moves",
+      value: moveCount || 0,
+      color: "text-blue-600",
+    },
+    {
+      icon: BookOpen,
+      label: "Optimal Moves",
+      value: Math.pow(2, numDisks) - 1,
+      color: "text-purple-600",
+    },
+    {
+      icon: Clock,
+      label: "Execution Time",
+      value: `${executionTime.toFixed(2)} ms`,
+      color: "text-orange-600",
+    },
+  ];
+
   return (
-    <div className="space-y-4">
-      {/* Controls */}
-      <Card className="p-4">
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <Label>Number of Disks</Label>
-              <Select
-                value={numDisks.toString()}
-                onValueChange={(value) => setNumDisks(parseInt(value))}
-                disabled={solving || isPlaying}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3">3 Disks</SelectItem>
-                  <SelectItem value="4">4 Disks</SelectItem>
-                  <SelectItem value="5">5 Disks</SelectItem>
-                  <SelectItem value="6">6 Disks</SelectItem>
-                  <SelectItem value="7">7 Disks</SelectItem>
-                  <SelectItem value="8">8 Disks</SelectItem>
-                </SelectContent>
-              </Select>
+    <div className="space-y-6">
+      {/* Algorithm Information */}
+      <AlgorithmInfoCard
+        title="Tower of Hanoi"
+        description="A classic mathematical puzzle consisting of three rods and a number of disks of different sizes, which can slide onto any rod. The puzzle starts with disks neatly stacked in ascending order of size on one rod, the smallest at the top."
+        goal="Move all disks from the first rod to the third rod, following these rules: (1) Only one disk can be moved at a time, (2) Each move consists of taking the top disk from one stack and placing it on top of another stack, (3) No larger disk may be placed on top of a smaller disk."
+        timeComplexity="O(2^n)"
+        spaceComplexity="O(n)"
+        features={[
+          "Recursive solution demonstrates exponential growth",
+          "Optimal solution guaranteed with 2^n - 1 moves",
+          "Classic example of divide-and-conquer algorithms",
+          "Visualization shows the recursive nature of the solution",
+        ]}
+      />
+
+      {/* Configuration Panel */}
+      <ConfigurationPanel options={configOptions} />
+
+      {/* Control Panel */}
+      <ControlPanel
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onReset={() => {
+          initializeTowers();
+          setMoveCount(0);
+          setExecutionTime(0);
+        }}
+        isPlaying={isPlaying}
+        disabled={!solution || !solution.steps || solving}
+        speed={speed}
+        onSpeedChange={setSpeed}
+        showStepControls={false}
+        customActions={
+          <>
+            <button
+              onClick={solveTowerOfHanoi}
+              disabled={solving || isPlaying}
+              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-md hover:shadow-lg flex items-center gap-2"
+            >
+              {solving ? "Solving..." : "Solve Puzzle"}
+            </button>
+          </>
+        }
+      />
+
+      {/* Progress Info */}
+      {solution && solution.steps && solution.steps.length > 0 && (
+        <Card className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border-blue-200 dark:border-blue-800">
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <span className="text-muted-foreground">Move: </span>
+              <span className="font-semibold">
+                {currentStep} / {solution.steps.length}
+              </span>
+              {moveInfo && (
+                <span className="ml-2 text-xs px-3 py-1 rounded-full bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-600">
+                  Tower {moveInfo.from} → Tower {moveInfo.to}
+                  {moveInfo.disk && ` (Disk ${moveInfo.disk})`}
+                </span>
+              )}
             </div>
-
-            <div className="flex gap-2 items-end">
-              <Button
-                size="sm"
-                onClick={solveTowerOfHanoi}
-                disabled={solving || isPlaying}
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {solving ? "Solving..." : "Solve"}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={initializeTowers}
-                disabled={solving || isPlaying}
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reset
-              </Button>
-            </div>
-          </div>
-
-          {/* Playback Controls */}
-          {solution && solution.steps && solution.steps.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsPlaying(!isPlaying)}
-                disabled={currentStep >= solution.steps.length - 1}
-              >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setCurrentStep(0);
-                  setIsPlaying(false);
+            <div className="h-2 w-64 bg-secondary rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                initial={{ width: 0 }}
+                animate={{
+                  width: `${(currentStep / solution.steps.length) * 100}%`,
                 }}
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-
-              <div className="flex-1">
-                <div className="text-sm">
-                  <span className="text-muted-foreground">Move: </span>
-                  {currentStep} / {solution.steps.length}
-                  {moveInfo && (
-                    <span className="ml-2 text-xs px-2 py-1 rounded-full bg-secondary">
-                      Tower {moveInfo.from} → Tower {moveInfo.to}
-                      {moveInfo.disk && ` (Disk ${moveInfo.disk})`}
-                    </span>
-                  )}
-                </div>
-                <div className="h-2 bg-secondary rounded-full overflow-hidden mt-1">
-                  <motion.div
-                    className="h-full bg-primary"
-                    initial={{ width: 0 }}
-                    animate={{
-                      width: `${(currentStep / solution.steps.length) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="w-48">
-                <Label className="text-xs mb-2 block">Speed</Label>
-                <Slider
-                  value={[speed]}
-                  onValueChange={(value) => setSpeed(value[0])}
-                  min={100}
-                  max={1000}
-                  step={100}
-                  className="cursor-pointer"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  <span>Fast</span>
-                  <span>Slow</span>
-                </div>
-              </div>
+              />
             </div>
-          )}
-
-          <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-900 dark:text-blue-100">
-              <strong>Tower of Hanoi:</strong> Move all disks from Tower 1 to
-              Tower 3. Only one disk can be moved at a time, and no larger disk
-              can be on top of a smaller one.
-            </p>
           </div>
-        </div>
-      </Card>
+        </Card>
+      )}
+
+      {/* Statistics */}
+      <StatisticsPanel statistics={statistics} />
 
       {/* Tower Visualization */}
       <Card className="p-8">
@@ -322,40 +338,6 @@ export function TowerOfHanoiVisualizer({
           </div>
         </div>
       </Card>
-
-      {/* Statistics */}
-      {solution && (
-        <Card className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-muted-foreground">Status</div>
-              <div className="text-lg font-semibold">
-                {solution.steps && solution.steps.length > 0
-                  ? "✓ Complete"
-                  : "In Progress"}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Total Moves</div>
-              <div className="text-lg font-semibold">
-                {solution.total_moves}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Optimal Moves</div>
-              <div className="text-lg font-semibold">
-                {Math.pow(2, numDisks) - 1}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">
-                Number of Disks
-              </div>
-              <div className="text-lg font-semibold">{numDisks}</div>
-            </div>
-          </div>
-        </Card>
-      )}
     </div>
   );
 }
