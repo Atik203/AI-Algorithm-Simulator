@@ -125,10 +125,10 @@ frontend/*.tsbuildinfo
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-yarn.lock
+
 
 # npm
-package-lock.json
+
 npm-debug.log
 .npm
 
