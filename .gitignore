@@ -19,7 +19,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -44,11 +43,9 @@ backend/env/
 # Django specific
 *.log
 local_settings.py
-db.sqlite3
+
 db.sqlite3-journal
-media/
-staticfiles/
-static/
+
 
 # Django migrations (uncomment if you want to ignore them)
 # */migrations/
@@ -140,8 +137,8 @@ pnpm-lock.yaml
 # =====================================
 
 # SQLite
-*.sqlite
-*.sqlite3
+.sqlite
+.sqlite3
 *.db
 
 
