@@ -170,13 +170,16 @@ export interface GamePlayResponse {
   game_history?: any[];
   evaluations?: any[];
   total_moves?: number;
-  algorithm: string;
+  algorithm?: string;
   n_disks?: number;
   steps?: any[];
   optimal_moves?: number;
   is_optimal?: boolean;
   best_column?: number;
   score?: number;
+  // For backwards compatibility
+  success?: boolean;
+  moves?: any[];
 }
 
 export const playGame = (data: GamePlayRequest) =>

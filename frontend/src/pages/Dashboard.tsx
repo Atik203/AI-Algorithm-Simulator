@@ -15,7 +15,12 @@ import {
   BarChart3,
   Calendar,
   Clock,
+  Crown,
+  Gamepad2,
+  Grid3x3,
+  Lightbulb,
   PlayCircle,
+  Puzzle,
   Target,
   TrendingUp,
   Zap,
@@ -27,11 +32,22 @@ import { toast } from "sonner";
 interface SimulationData {
   id: number;
   algorithm: string;
+  algorithm_display?: string;
+  simulation_type?: string;
+  simulation_type_display?: string;
   created_at: string;
   path_found: boolean;
+  solved?: boolean;
   nodes_explored: number;
   path_cost: number;
   execution_time: number;
+  total_moves?: number;
+  board_size?: number;
+}
+
+interface SimulationTypeCount {
+  simulation_type: string;
+  count: number;
 }
 
 interface DashboardStats {
@@ -40,6 +56,7 @@ interface DashboardStats {
   favoriteAlgorithm: string;
   avgExecutionTime: number;
   totalNodesExplored: number;
+  simulationTypeCounts: SimulationTypeCount[];
 }
 
 export default function Dashboard() {
@@ -52,6 +69,7 @@ export default function Dashboard() {
     favoriteAlgorithm: "N/A",
     avgExecutionTime: 0,
     totalNodesExplored: 0,
+    simulationTypeCounts: [],
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -78,7 +96,10 @@ export default function Dashboard() {
           ? dashboardData.favorite_algorithm.algorithm.toUpperCase()
           : "N/A",
         avgExecutionTime: dashboardData.avg_execution_time,
-        totalNodesExplored: dashboardData.total_simulations * 100, // Estimate
+        totalNodesExplored:
+          dashboardData.total_nodes_explored ||
+          dashboardData.total_simulations * 100,
+        simulationTypeCounts: dashboardData.simulation_type_counts || [],
       });
 
       // Set recent simulations
@@ -102,6 +123,42 @@ export default function Dashboard() {
     hill_climbing: "Hill Climbing",
     simulated_annealing: "Simulated Annealing",
     genetic: "Genetic Algorithm",
+    "8-puzzle-astar": "8-Puzzle A*",
+    "8-puzzle-bfs": "8-Puzzle BFS",
+    "n-queens": "N-Queens",
+    sudoku: "Sudoku",
+    "tic-tac-toe-minimax": "Tic-Tac-Toe Minimax",
+    "tic-tac-toe-alphabeta": "Tic-Tac-Toe Alpha-Beta",
+    "tower-of-hanoi": "Tower of Hanoi",
+    connect4: "Connect 4",
+  };
+
+  const simulationTypeNames: Record<string, string> = {
+    pathfinding: "Pathfinding",
+    "8-puzzle": "8-Puzzle",
+    "n-queens": "N-Queens",
+    sudoku: "Sudoku",
+    "tic-tac-toe": "Tic-Tac-Toe",
+    "tower-of-hanoi": "Tower of Hanoi",
+    connect4: "Connect 4",
+  };
+
+  const getSimulationTypeIcon = (type: string) => {
+    switch (type) {
+      case "pathfinding":
+        return <Grid3x3 className="h-5 w-5" />;
+      case "8-puzzle":
+      case "sudoku":
+        return <Puzzle className="h-5 w-5" />;
+      case "n-queens":
+        return <Crown className="h-5 w-5" />;
+      case "tic-tac-toe":
+        return <Gamepad2 className="h-5 w-5" />;
+      case "tower-of-hanoi":
+        return <Lightbulb className="h-5 w-5" />;
+      default:
+        return <Grid3x3 className="h-5 w-5" />;
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -245,6 +302,47 @@ export default function Dashboard() {
           </motion.div>
         </motion.div>
 
+        {/* Simulation Type Breakdown */}
+        {stats.simulationTypeCounts.length > 0 && (
+          <motion.div variants={fadeInUp}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Simulation Types
+                </CardTitle>
+                <CardDescription>
+                  Your activity across different simulation types
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {stats.simulationTypeCounts.map((typeCount) => (
+                    <div
+                      key={typeCount.simulation_type}
+                      className="flex flex-col items-center p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="mb-3 p-3 rounded-full bg-primary/10">
+                        {getSimulationTypeIcon(typeCount.simulation_type)}
+                      </div>
+                      <p className="font-semibold text-center text-sm mb-1">
+                        {simulationTypeNames[typeCount.simulation_type] ||
+                          typeCount.simulation_type}
+                      </p>
+                      <p className="text-2xl font-bold text-primary">
+                        {typeCount.count}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        simulation{typeCount.count !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         {/* Recent Simulations */}
         <motion.div variants={fadeInUp}>
           <Card>
@@ -276,16 +374,33 @@ export default function Dashboard() {
                       className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                     >
                       <div className="flex items-center gap-4">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            sim.path_found ? "bg-green-500" : "bg-red-500"
-                          }`}
-                        />
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          {getSimulationTypeIcon(
+                            sim.simulation_type || "pathfinding"
+                          )}
+                        </div>
                         <div>
-                          <p className="font-medium">
-                            {algorithmNameMap[sim.algorithm] || sim.algorithm}
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">
+                              {sim.algorithm_display ||
+                                algorithmNameMap[sim.algorithm] ||
+                                sim.algorithm}
+                            </p>
+                            <div
+                              className={`w-2 h-2 rounded-full ${
+                                sim.path_found || sim.solved
+                                  ? "bg-green-500"
+                                  : "bg-red-500"
+                              }`}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {sim.simulation_type_display ||
+                              simulationTypeNames[
+                                sim.simulation_type || "pathfinding"
+                              ]}
                           </p>
-                          <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                          <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
                             <Calendar className="h-3 w-3" />
                             {formatDate(sim.created_at)}
                           </p>
@@ -293,8 +408,13 @@ export default function Dashboard() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium">
-                          {sim.nodes_explored} nodes explored
+                          {sim.nodes_explored} nodes
                         </p>
+                        {sim.total_moves && (
+                          <p className="text-xs text-muted-foreground">
+                            {sim.total_moves} moves
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground">
                           {formatTime(sim.execution_time)}
                         </p>

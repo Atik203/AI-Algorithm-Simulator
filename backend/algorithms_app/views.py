@@ -2,7 +2,7 @@ import time
 
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, Q, Sum
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
@@ -323,8 +323,10 @@ def dashboard_stats(request):
     # Total simulations
     total_simulations = simulations.count()
 
-    # Success rate
-    successful_simulations = simulations.filter(path_found=True).count()
+    # Success rate (path_found for pathfinding, solved for puzzles/games)
+    successful_simulations = simulations.filter(
+        Q(path_found=True) | Q(solved=True)
+    ).count()
     success_rate = (
         (successful_simulations / total_simulations * 100)
         if total_simulations > 0
@@ -339,6 +341,13 @@ def dashboard_stats(request):
     )
     favorite_algorithm = algorithm_counts.first() if algorithm_counts else None
 
+    # Simulation type breakdown
+    simulation_type_counts = (
+        simulations.values("simulation_type")
+        .annotate(count=Count("simulation_type"))
+        .order_by("-count")
+    )
+
     # Recent simulations (last 5)
     recent_simulations = simulations[:5]
     recent_data = SimulationSerializer(recent_simulations, many=True).data
@@ -348,13 +357,20 @@ def dashboard_stats(request):
         simulations.aggregate(Avg("execution_time"))["execution_time__avg"] or 0
     )
 
+    # Total nodes explored
+    total_nodes_explored = (
+        simulations.aggregate(Sum("nodes_explored"))["nodes_explored__sum"] or 0
+    )
+
     return Response(
         {
             "total_simulations": total_simulations,
             "successful_simulations": successful_simulations,
             "success_rate": round(success_rate, 1),
             "favorite_algorithm": favorite_algorithm,
+            "simulation_type_counts": list(simulation_type_counts),
             "recent_simulations": recent_data,
             "avg_execution_time": round(avg_execution_time, 3),
+            "total_nodes_explored": total_nodes_explored,
         }
     )

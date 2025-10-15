@@ -70,23 +70,63 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class SimulationSerializer(serializers.ModelSerializer):
     """Serializer for simulation results"""
-    
+
+    simulation_type_display = serializers.CharField(
+        source="get_simulation_type_display", read_only=True
+    )
+    algorithm_display = serializers.CharField(
+        source="get_algorithm_display", read_only=True
+    )
+
     class Meta:
         model = Simulation
         fields = [
-            'id', 'user', 'algorithm', 'grid_data', 'start_position', 
-            'goal_position', 'heuristic', 'path_found', 'path', 'steps',
-            'nodes_explored', 'path_cost', 'execution_time', 'created_at'
+            "id",
+            "user",
+            "simulation_type",
+            "simulation_type_display",
+            "algorithm",
+            "algorithm_display",
+            "grid_data",
+            "start_position",
+            "goal_position",
+            "heuristic",
+            "initial_state",
+            "final_state",
+            "board_size",
+            "path_found",
+            "solved",
+            "path",
+            "steps",
+            "nodes_explored",
+            "path_cost",
+            "execution_time",
+            "total_moves",
+            "created_at",
         ]
-        read_only_fields = ['id', 'user', 'created_at']
+        read_only_fields = [
+            "id",
+            "user",
+            "created_at",
+            "simulation_type_display",
+            "algorithm_display",
+        ]
 
 
 class AlgorithmExecutionSerializer(serializers.Serializer):
     """Serializer for algorithm execution requests"""
-    algorithm = serializers.ChoiceField(choices=[
-        'astar', 'bfs', 'dfs', 'dijkstra', 
-        'hill_climbing', 'simulated_annealing', 'genetic'
-    ])
+
+    algorithm = serializers.ChoiceField(
+        choices=[
+            "astar",
+            "bfs",
+            "dfs",
+            "dijkstra",
+            "hill_climbing",
+            "simulated_annealing",
+            "genetic",
+        ]
+    )
     grid = serializers.ListField(
         child=serializers.ListField(child=serializers.IntegerField())
     )
@@ -96,5 +136,5 @@ class AlgorithmExecutionSerializer(serializers.Serializer):
     goal = serializers.ListField(
         child=serializers.IntegerField(), min_length=2, max_length=2
     )
-    heuristic = serializers.CharField(required=False, default='manhattan')
+    heuristic = serializers.CharField(required=False, default="manhattan")
     save_simulation = serializers.BooleanField(default=False)

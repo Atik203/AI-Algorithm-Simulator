@@ -3,15 +3,21 @@
  * Pathfinding, 8-Puzzle, N-Queens, Tic-Tac-Toe, etc.
  */
 
-import { apiClient, getSimulationTypes, type SimulationType as APISimulationType } from "@/api/api";
+import {
+  apiClient,
+  getSimulationTypes,
+  type SimulationType as APISimulationType,
+} from "@/api/api";
+import { TicTacToe } from "@/components/game/TicTacToe";
+import { TowerOfHanoiVisualizer } from "@/components/game/TowerOfHanoiVisualizer";
+import { EightPuzzleVisualizer } from "@/components/puzzle/EightPuzzleVisualizer";
+import { NQueensVisualizer } from "@/components/puzzle/NQueensVisualizer";
+import { SudokuVisualizer } from "@/components/puzzle/SudokuVisualizer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AlgorithmStatistics } from "@/components/visualizer/AlgorithmStatistics";
 import { AlgorithmVisualizer } from "@/components/visualizer/AlgorithmVisualizer";
 import { VisualizerControls } from "@/components/visualizer/VisualizerControls";
-import { EightPuzzleVisualizer } from "@/components/puzzle/EightPuzzleVisualizer";
-import { NQueensVisualizer } from "@/components/puzzle/NQueensVisualizer";
-import { TicTacToe } from "@/components/game/TicTacToe";
 import { fadeIn, fadeInUp, staggerContainer } from "@/lib/animations";
 import {
   addRandomObstacles,
@@ -26,8 +32,8 @@ import type {
   GridState,
   HeuristicType,
   Position,
-  Statistics,
   SimulationType,
+  Statistics,
 } from "@/types/visualizer";
 import { GRID_CONFIGS } from "@/types/visualizer";
 import { motion } from "framer-motion";
@@ -35,11 +41,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Eraser,
-  Grid3x3,
-  Wand2,
-  Lightbulb,
   Gamepad2,
+  Grid3x3,
+  Lightbulb,
   Puzzle,
+  Wand2,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -51,8 +57,11 @@ export default function Simulator() {
   const { isAuthenticated } = useAppSelector((state) => state.user);
 
   // Simulation Type State
-  const [simulationType, setSimulationType] = useState<SimulationType>("pathfinding");
-  const [simulationTypes, setSimulationTypes] = useState<APISimulationType[]>([]);
+  const [simulationType, setSimulationType] =
+    useState<SimulationType>("pathfinding");
+  const [simulationTypes, setSimulationTypes] = useState<APISimulationType[]>(
+    []
+  );
 
   // Grid State (for pathfinding)
   const [gridSize, setGridSize] = useState<GridSize>("medium");
@@ -128,7 +137,11 @@ export default function Simulator() {
 
   // Playback animation (pathfinding only)
   useEffect(() => {
-    if (isPlaying && currentStep < steps.length && simulationType === "pathfinding") {
+    if (
+      isPlaying &&
+      currentStep < steps.length &&
+      simulationType === "pathfinding"
+    ) {
       const delay = 1000 / (speed * 10);
       intervalRef.current = setTimeout(() => {
         setCurrentStep((prev) => prev + 1);
@@ -479,37 +492,17 @@ export default function Simulator() {
         return <TicTacToe />;
 
       case "sudoku":
-        return (
-          <Card className="p-8 text-center">
-            <Puzzle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Sudoku Solver</h3>
-            <p className="text-muted-foreground mb-4">
-              Sudoku visualizer coming soon!
-            </p>
-            <p className="text-sm text-muted-foreground">
-              This feature is under development. Try 8-Puzzle or N-Queens instead.
-            </p>
-          </Card>
-        );
+        return <SudokuVisualizer />;
 
       case "tower-of-hanoi":
-        return (
-          <Card className="p-8 text-center">
-            <Lightbulb className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Tower of Hanoi</h3>
-            <p className="text-muted-foreground mb-4">
-              Tower of Hanoi visualizer coming soon!
-            </p>
-            <p className="text-sm text-muted-foreground">
-              This feature is under development. Try Tic-Tac-Toe or N-Queens instead.
-            </p>
-          </Card>
-        );
+        return <TowerOfHanoiVisualizer />;
 
       default:
         return (
           <Card className="p-8 text-center">
-            <p className="text-muted-foreground">Select a simulation type to begin</p>
+            <p className="text-muted-foreground">
+              Select a simulation type to begin
+            </p>
           </Card>
         );
     }
