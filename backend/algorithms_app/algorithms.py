@@ -69,6 +69,8 @@ class AlgorithmRunner:
         path = [list(current)]
         while current in came_from:
             current = came_from[current]
+            if current is None:
+                break
             path.append(list(current))
         path.reverse()
         return path
