@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { motion } from "framer-motion";
 import {
   Crown,
@@ -37,6 +38,7 @@ export function NQueensVisualizer({ onSave }: NQueensVisualizerProps) {
   const [solution, setSolution] = useState<PuzzleSolveResponse | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useState(300); // milliseconds per step
   const [manualMode, setManualMode] = useState(false);
   const [manualBoard, setManualBoard] = useState<number[][]>(() =>
     Array(8)
@@ -181,10 +183,10 @@ export function NQueensVisualizer({ onSave }: NQueensVisualizerProps) {
         }
         return prev + 1;
       });
-    }, 300);
+    }, speed);
 
     return () => clearInterval(interval);
-  }, [isPlaying, solution]);
+  }, [isPlaying, solution, speed]);
 
   // Get current board state
   const getCurrentBoard = () => {
@@ -335,6 +337,22 @@ export function NQueensVisualizer({ onSave }: NQueensVisualizerProps) {
                         }%`,
                       }}
                     />
+                  </div>
+                </div>
+
+                <div className="w-48">
+                  <Label className="text-xs mb-2 block">Speed</Label>
+                  <Slider
+                    value={[speed]}
+                    onValueChange={(value) => setSpeed(value[0])}
+                    min={50}
+                    max={1000}
+                    step={50}
+                    className="cursor-pointer"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>Fast</span>
+                    <span>Slow</span>
                   </div>
                 </div>
               </div>

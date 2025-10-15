@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { motion } from "framer-motion";
 import { Pause, Play, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -64,6 +65,7 @@ export function SudokuVisualizer({ onSave }: SudokuVisualizerProps) {
   const [solution, setSolution] = useState<PuzzleSolveResponse | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useState(150); // milliseconds per step
   const [focusedCell, setFocusedCell] = useState<{
     row: number;
     col: number;
@@ -157,10 +159,10 @@ export function SudokuVisualizer({ onSave }: SudokuVisualizerProps) {
         }
         return prev + 1;
       });
-    }, 150);
+    }, speed);
 
     return () => clearInterval(interval);
-  }, [isPlaying, solution]);
+  }, [isPlaying, solution, speed]);
 
   // Get current board state
   const getCurrentBoard = () => {
@@ -276,6 +278,22 @@ export function SudokuVisualizer({ onSave }: SudokuVisualizerProps) {
                       }%`,
                     }}
                   />
+                </div>
+              </div>
+
+              <div className="w-48">
+                <Label className="text-xs mb-2 block">Speed</Label>
+                <Slider
+                  value={[speed]}
+                  onValueChange={(value) => setSpeed(value[0])}
+                  min={50}
+                  max={500}
+                  step={50}
+                  className="cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>Fast</span>
+                  <span>Slow</span>
                 </div>
               </div>
             </div>

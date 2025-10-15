@@ -9,7 +9,12 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  Crown,
+  Gamepad2,
+  Grid3x3,
   Hash,
+  Lightbulb,
+  Puzzle,
   Trash2,
   TrendingUp,
   XCircle,
@@ -21,10 +26,16 @@ import { toast } from "sonner";
 interface Simulation {
   id: number;
   algorithm: string;
+  algorithm_display?: string;
+  simulation_type?: string;
+  simulation_type_display?: string;
   path_found: boolean;
+  solved?: boolean;
   nodes_explored: number;
   path_cost: number;
   execution_time: number;
+  total_moves?: number;
+  board_size?: number;
   created_at: string;
 }
 
@@ -36,6 +47,42 @@ const algorithmNames: Record<string, string> = {
   hill_climbing: "Hill Climbing",
   simulated_annealing: "Simulated Annealing",
   genetic: "Genetic Algorithm",
+  "8-puzzle-astar": "8-Puzzle A*",
+  "8-puzzle-bfs": "8-Puzzle BFS",
+  "n-queens": "N-Queens",
+  sudoku: "Sudoku",
+  "tic-tac-toe-minimax": "Tic-Tac-Toe Minimax",
+  "tic-tac-toe-alphabeta": "Tic-Tac-Toe Alpha-Beta",
+  "tower-of-hanoi": "Tower of Hanoi",
+  connect4: "Connect 4",
+};
+
+const simulationTypeNames: Record<string, string> = {
+  pathfinding: "Pathfinding",
+  "8-puzzle": "8-Puzzle",
+  "n-queens": "N-Queens",
+  sudoku: "Sudoku",
+  "tic-tac-toe": "Tic-Tac-Toe",
+  "tower-of-hanoi": "Tower of Hanoi",
+  connect4: "Connect 4",
+};
+
+const getSimulationTypeIcon = (type: string) => {
+  switch (type) {
+    case "pathfinding":
+      return <Grid3x3 className="h-5 w-5" />;
+    case "8-puzzle":
+    case "sudoku":
+      return <Puzzle className="h-5 w-5" />;
+    case "n-queens":
+      return <Crown className="h-5 w-5" />;
+    case "tic-tac-toe":
+      return <Gamepad2 className="h-5 w-5" />;
+    case "tower-of-hanoi":
+      return <Lightbulb className="h-5 w-5" />;
+    default:
+      return <Grid3x3 className="h-5 w-5" />;
+  }
 };
 
 export default function History() {
@@ -144,22 +191,41 @@ export default function History() {
                   <Card className="p-6 h-full flex flex-col">
                     {/* Algorithm Name & Status */}
                     <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="font-semibold text-lg mb-1">
-                          {algorithmNames[sim.algorithm] || sim.algorithm}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          {sim.path_found ? (
-                            <div className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-                              <CheckCircle2 className="h-4 w-4" />
-                              <span>Success</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1 text-sm text-red-600 dark:text-red-400">
-                              <XCircle className="h-4 w-4" />
-                              <span>No Path</span>
-                            </div>
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          {getSimulationTypeIcon(
+                            sim.simulation_type || "pathfinding"
                           )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-1">
+                            {sim.algorithm_display ||
+                              algorithmNames[sim.algorithm] ||
+                              sim.algorithm}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mb-1">
+                            {sim.simulation_type_display ||
+                              simulationTypeNames[
+                                sim.simulation_type || "pathfinding"
+                              ]}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            {sim.path_found || sim.solved ? (
+                              <div className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>Success</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1 text-sm text-red-600 dark:text-red-400">
+                                <XCircle className="h-4 w-4" />
+                                <span>
+                                  {sim.simulation_type === "pathfinding"
+                                    ? "No Path"
+                                    : "Unsolved"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <Button
@@ -183,22 +249,48 @@ export default function History() {
                           {sim.nodes_explored}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          Path Cost:
-                        </span>
-                        <span className="font-medium">
-                          {sim.path_cost.toFixed(2)}
-                        </span>
-                      </div>
+                      {sim.simulation_type === "pathfinding" && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            Path Cost:
+                          </span>
+                          <span className="font-medium">
+                            {sim.path_cost.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      {sim.total_moves !== undefined && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            Total Moves:
+                          </span>
+                          <span className="font-medium">{sim.total_moves}</span>
+                        </div>
+                      )}
+                      {sim.board_size !== undefined && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Grid3x3 className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            Board Size:
+                          </span>
+                          <span className="font-medium">
+                            {sim.board_size}x{sim.board_size}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span className="text-muted-foreground">
                           Execution:
                         </span>
                         <span className="font-medium">
-                          {sim.execution_time.toFixed(3)}s
+                          {sim.execution_time < 0.001
+                            ? `${(sim.execution_time * 1000000).toFixed(0)} μs`
+                            : sim.execution_time < 1
+                            ? `${(sim.execution_time * 1000).toFixed(2)} ms`
+                            : `${sim.execution_time.toFixed(3)}s`}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm pt-2 border-t">

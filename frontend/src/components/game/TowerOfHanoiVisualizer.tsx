@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { motion } from "framer-motion";
 import { Pause, Play, RotateCcw, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -31,6 +32,7 @@ export function TowerOfHanoiVisualizer({
   const [solution, setSolution] = useState<GamePlayResponse | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useState(800);
   const [towers, setTowers] = useState<number[][]>([[], [], []]);
 
   // Initialize towers
@@ -88,10 +90,10 @@ export function TowerOfHanoiVisualizer({
         }
         return prev + 1;
       });
-    }, 800);
+    }, speed);
 
     return () => clearInterval(interval);
-  }, [isPlaying, solution]);
+  }, [isPlaying, solution, speed]);
 
   // Get current tower state
   const getCurrentTowers = () => {
@@ -240,6 +242,22 @@ export function TowerOfHanoiVisualizer({
                       width: `${(currentStep / solution.steps.length) * 100}%`,
                     }}
                   />
+                </div>
+              </div>
+
+              <div className="w-48">
+                <Label className="text-xs mb-2 block">Speed</Label>
+                <Slider
+                  value={[speed]}
+                  onValueChange={(value) => setSpeed(value[0])}
+                  min={100}
+                  max={1000}
+                  step={100}
+                  className="cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>Fast</span>
+                  <span>Slow</span>
                 </div>
               </div>
             </div>
