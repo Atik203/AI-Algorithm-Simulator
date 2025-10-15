@@ -8,6 +8,7 @@ export type SimulationType =
   | "8-puzzle"
   | "n-queens"
   | "tic-tac-toe"
+  | "connect4"
   | "sudoku"
   | "tower-of-hanoi";
 

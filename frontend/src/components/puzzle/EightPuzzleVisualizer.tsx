@@ -4,18 +4,20 @@
  */
 
 import { solvePuzzle, type PuzzleSolveResponse } from "@/api/api";
+import { AlgorithmInfoCard } from "@/components/common/AlgorithmInfoCard";
+import {
+  ConfigOption,
+  ConfigurationPanel,
+} from "@/components/common/ConfigurationPanel";
+import { ControlPanel } from "@/components/common/ControlPanel";
+import {
+  StatisticsPanel,
+  createPuzzleStats,
+} from "@/components/common/StatisticsPanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { motion } from "framer-motion";
-import { Pause, Play, RotateCcw, Shuffle, Sparkles } from "lucide-react";
+import { Puzzle, Shuffle, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -40,6 +42,8 @@ export function EightPuzzleVisualizer({ onSave }: EightPuzzleVisualizerProps) {
   const [solution, setSolution] = useState<PuzzleSolveResponse | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useState(1);
+  const [executionTime, setExecutionTime] = useState(0);
 
   // Shuffle the board
   const shuffleBoard = () => {
@@ -126,6 +130,7 @@ export function EightPuzzleVisualizer({ onSave }: EightPuzzleVisualizerProps) {
     setSolving(true);
     setCurrentStep(0);
     setIsPlaying(false);
+    const startTime = performance.now();
 
     try {
       const response = await solvePuzzle({
@@ -133,6 +138,9 @@ export function EightPuzzleVisualizer({ onSave }: EightPuzzleVisualizerProps) {
         algorithm,
         initial_state: board,
       });
+
+      const endTime = performance.now();
+      setExecutionTime(endTime - startTime);
 
       setSolution(response);
 
@@ -166,10 +174,10 @@ export function EightPuzzleVisualizer({ onSave }: EightPuzzleVisualizerProps) {
         }
         return prev + 1;
       });
-    }, 500);
+    }, 1000 / speed);
 
     return () => clearInterval(interval);
-  }, [isPlaying, solution]);
+  }, [isPlaying, solution, speed]);
 
   // Get current board state
   const getCurrentBoard = () => {
@@ -181,99 +189,118 @@ export function EightPuzzleVisualizer({ onSave }: EightPuzzleVisualizerProps) {
 
   const displayBoard = getCurrentBoard();
 
+  // Configuration options
+  const configOptions: ConfigOption[] = [
+    {
+      id: "algorithm",
+      label: "Algorithm",
+      type: "select",
+      value: algorithm,
+      onChange: setAlgorithm,
+      options: [
+        { value: "astar", label: "A* Search" },
+        { value: "bfs", label: "Breadth-First Search" },
+      ],
+      disabled: solving || isPlaying,
+      description:
+        algorithm === "astar"
+          ? "Uses Manhattan distance heuristic for optimal path finding"
+          : "Explores all possible moves systematically",
+    },
+  ];
+
+  // Create statistics
+  const statistics = solution
+    ? createPuzzleStats({
+        moves: currentStep,
+        nodesExplored: solution.nodes_explored,
+        solutionLength: solution.moves,
+        executionTime,
+      })
+    : [];
+
   return (
-    <div className="space-y-4">
-      {/* Controls */}
-      <Card className="p-4">
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <Label>Algorithm</Label>
-              <Select
-                value={algorithm}
-                onValueChange={(value) =>
-                  setAlgorithm(value as "astar" | "bfs")
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="astar">A* Search</SelectItem>
-                  <SelectItem value="bfs">Breadth-First Search</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+    <div className="space-y-6">
+      {/* Algorithm Info Card */}
+      <AlgorithmInfoCard
+        title="8-Puzzle Sliding Tile"
+        description="Classic sliding tile puzzle where you arrange numbered tiles in order by sliding them into the empty space. Implements A* with Manhattan distance heuristic and BFS for guaranteed optimal solutions."
+        icon={<Puzzle className="w-6 h-6 text-white" />}
+        goal="Arrange tiles 1-8 in order with blank in bottom-right"
+        timeComplexity="O(b^d) where b is branching factor, d is depth"
+        spaceComplexity="O(b^d) for storing explored states"
+        features={[
+          "A* Search with Manhattan distance heuristic",
+          "BFS for exhaustive search",
+          "Guaranteed optimal solution",
+          "Animated step-by-step visualization",
+        ]}
+      />
 
-            <div className="flex gap-2 items-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={shuffleBoard}
-                disabled={solving || isPlaying}
-              >
-                <Shuffle className="h-4 w-4 mr-2" />
-                Shuffle
-              </Button>
+      {/* Configuration Panel */}
+      <ConfigurationPanel
+        title="Configuration"
+        options={configOptions}
+        columns={1}
+      />
 
-              <Button
-                size="sm"
-                onClick={solvePuzzleNow}
-                disabled={solving || isPlaying}
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {solving ? "Solving..." : "Solve"}
-              </Button>
-            </div>
+      {/* Control Panel */}
+      <ControlPanel
+        isPlaying={isPlaying}
+        isPaused={!isPlaying && currentStep > 0}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onReset={() => {
+          setCurrentStep(0);
+          setIsPlaying(false);
+          setSolution(null);
+          toast.success("Reset complete");
+        }}
+        onStepForward={() => {
+          if (
+            solution &&
+            solution.path &&
+            currentStep < solution.path.length - 1
+          ) {
+            setCurrentStep(currentStep + 1);
+          }
+        }}
+        onStepBackward={() => {
+          if (currentStep > 0) {
+            setCurrentStep(currentStep - 1);
+          }
+        }}
+        speed={speed}
+        onSpeedChange={setSpeed}
+        currentStep={currentStep}
+        totalSteps={solution?.path?.length ? solution.path.length - 1 : 0}
+        disabled={solving || !solution}
+        showStepControls={!!solution && !!solution.path}
+        showSpeedControl={!!solution && !!solution.path}
+        customActions={
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={shuffleBoard}
+              disabled={solving || isPlaying}
+              className="flex-1"
+            >
+              <Shuffle className="h-4 w-4 mr-2" />
+              Shuffle
+            </Button>
+            <Button
+              size="sm"
+              onClick={solvePuzzleNow}
+              disabled={solving || isPlaying}
+              className="flex-1"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              {solving ? "Solving..." : "Solve"}
+            </Button>
           </div>
-
-          {/* Playback Controls */}
-          {solution && solution.path && solution.path.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsPlaying(!isPlaying)}
-                disabled={currentStep >= solution.path!.length - 1}
-              >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setCurrentStep(0);
-                  setIsPlaying(false);
-                }}
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-
-              <div className="flex-1">
-                <div className="text-sm text-muted-foreground">
-                  Step: {currentStep} / {solution.path.length - 1}
-                </div>
-                <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-primary"
-                    initial={{ width: 0 }}
-                    animate={{
-                      width: `${
-                        (currentStep / (solution.path.length - 1)) * 100
-                      }%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
+        }
+      />
 
       {/* Puzzle Board */}
       <Card className="p-8">
@@ -283,13 +310,14 @@ export function EightPuzzleVisualizer({ onSave }: EightPuzzleVisualizerProps) {
               row.map((tile, j) => (
                 <motion.div
                   key={`${i}-${j}`}
-                  className={`flex items-center justify-center text-3xl font-bold rounded-lg ${
+                  className={`flex items-center justify-center text-3xl font-bold rounded-lg transition-all ${
                     tile === 0
                       ? "bg-secondary/20"
-                      : "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg"
+                      : "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg hover:shadow-xl"
                   }`}
                   layout
                   transition={{ duration: 0.3 }}
+                  whileHover={tile !== 0 ? { scale: 1.05 } : {}}
                 >
                   {tile !== 0 && tile}
                 </motion.div>
@@ -297,38 +325,28 @@ export function EightPuzzleVisualizer({ onSave }: EightPuzzleVisualizerProps) {
             )}
           </div>
         </div>
+
+        {/* Solution Status */}
+        {solution && (
+          <div className="mt-6 text-center">
+            {solution.solved ? (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+                <span className="text-2xl">✓</span>
+                <span className="font-semibold">Solution Found!</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full">
+                <span className="text-2xl">⚠</span>
+                <span className="font-semibold">No Solution</span>
+              </div>
+            )}
+          </div>
+        )}
       </Card>
 
-      {/* Statistics */}
-      {solution && (
-        <Card className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-muted-foreground">Status</div>
-              <div className="text-lg font-semibold">
-                {solution.solved ? "✓ Solved" : "✗ Unsolvable"}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Moves</div>
-              <div className="text-lg font-semibold">{solution.moves || 0}</div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">
-                Nodes Explored
-              </div>
-              <div className="text-lg font-semibold">
-                {solution.nodes_explored}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Algorithm</div>
-              <div className="text-lg font-semibold">
-                {solution.algorithm === "astar" ? "A*" : "BFS"}
-              </div>
-            </div>
-          </div>
-        </Card>
+      {/* Real-time Statistics */}
+      {solution && statistics.length > 0 && (
+        <StatisticsPanel title="Real-time Statistics" statistics={statistics} />
       )}
     </div>
   );

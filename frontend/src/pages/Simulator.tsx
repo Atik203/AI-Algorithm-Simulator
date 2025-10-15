@@ -8,6 +8,7 @@ import {
   getSimulationTypes,
   type SimulationType as APISimulationType,
 } from "@/api/api";
+import { Connect4Visualizer } from "@/components/game/Connect4Visualizer";
 import { TicTacToe } from "@/components/game/TicTacToe";
 import { TowerOfHanoiVisualizer } from "@/components/game/TowerOfHanoiVisualizer";
 import { EightPuzzleVisualizer } from "@/components/puzzle/EightPuzzleVisualizer";
@@ -490,6 +491,9 @@ export default function Simulator() {
 
       case "tic-tac-toe":
         return <TicTacToe />;
+
+      case "connect4":
+        return <Connect4Visualizer />;
 
       case "sudoku":
         return <SudokuVisualizer />;
