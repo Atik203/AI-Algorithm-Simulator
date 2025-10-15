@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { authService } from "@api/auth";
-import { ModeToggle } from "@components/ModeToggle";
 import { Button } from "@components/ui/button";
 import {
   Card,
@@ -21,6 +20,8 @@ import {
 import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
 import { fadeInUp, staggerContainer } from "@lib/animations";
+import { useAppDispatch } from "@/store/hooks";
+import { setUser } from "@/store/slices/userSlice";
 
 // Validation schema
 const loginSchema = z.object({
@@ -33,6 +34,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,10 +55,23 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await authService.login({
+      const userData = await authService.login({
         username: data.username,
         password: data.password,
       });
+
+      // Get tokens from storage
+      const access = authService.getAccessToken();
+      const refresh = authService.getRefreshToken();
+      
+      // Update Redux store
+      if (access && refresh) {
+        dispatch(setUser({
+          user: userData,
+          access,
+          refresh,
+        }));
+      }
 
       toast.success("Welcome back!", {
         description: "You've successfully signed in 🎉",
@@ -65,12 +80,12 @@ export default function Login() {
 
       // Small delay for better UX
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/simulator");
       }, 800);
     } catch (err: any) {
       toast.error("Login failed", {
         description:
-          err.response?.data?.message || err.message || "Invalid credentials",
+          err.message || "Invalid credentials",
       });
     } finally {
       setIsLoading(false);
@@ -78,7 +93,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-4 relative overflow-hidden">
+    <div className="flex items-center justify-center bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-4 relative overflow-hidden min-h-screen">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -107,10 +122,6 @@ export default function Login() {
             ease: "easeInOut",
           }}
         />
-      </div>
-
-      <div className="absolute top-4 right-4 z-10">
-        <ModeToggle />
       </div>
 
       <motion.div

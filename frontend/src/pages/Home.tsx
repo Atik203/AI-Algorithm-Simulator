@@ -1,4 +1,4 @@
-import { ModeToggle } from "@components/ModeToggle";
+import { useAppSelector } from "@/store/hooks";
 import { Button } from "@components/ui/button";
 import { Card } from "@components/ui/card";
 import { fadeInUp, scaleIn, staggerContainer } from "@lib/animations";
@@ -117,9 +117,10 @@ const algorithms = {
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAppSelector((state) => state.user);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 relative overflow-hidden">
+    <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 relative overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -150,11 +151,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="absolute top-4 right-4 z-10">
-        <ModeToggle />
-      </div>
-
-      <div className="container mx-auto px-4 py-16 relative z-10">
+      <div className="container mx-auto px-4 py-16 relative z-10 flex-1">
         {/* Hero Section */}
         <motion.div
           initial="hidden"
@@ -162,6 +159,22 @@ export default function Home() {
           variants={staggerContainer}
           className="text-center mb-16"
         >
+          {/* Welcome message for authenticated users */}
+          {isAuthenticated && user && (
+            <motion.div
+              variants={fadeInUp}
+              className="mb-6 inline-block px-6 py-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full"
+            >
+              <p className="text-sm font-medium">
+                Welcome back,{" "}
+                <span className="font-bold text-blue-600 dark:text-blue-400">
+                  {user.username}
+                </span>
+                ! 👋
+              </p>
+            </motion.div>
+          )}
+
           <motion.div variants={scaleIn} className="flex justify-center mb-6">
             <div className="relative">
               <motion.div
@@ -394,31 +407,6 @@ export default function Home() {
               </Button>
             </motion.div>
           </motion.div>
-        </motion.div>
-
-        {/* Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mt-24 text-center"
-        >
-          <div className="flex justify-center gap-4 text-sm text-muted-foreground mb-4">
-            <span className="hover:text-foreground transition-colors cursor-pointer">
-              Documentation
-            </span>
-            <span className="text-muted-foreground/50">•</span>
-            <span className="hover:text-foreground transition-colors cursor-pointer">
-              GitHub
-            </span>
-            <span className="text-muted-foreground/50">•</span>
-            <span className="hover:text-foreground transition-colors cursor-pointer">
-              API
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Built with React + TypeScript + Django REST Framework • Open Source
-          </p>
         </motion.div>
       </div>
     </div>

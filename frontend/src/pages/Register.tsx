@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { authService } from "@api/auth";
-import { ModeToggle } from "@components/ModeToggle";
 import { Button } from "@components/ui/button";
 import {
   Card,
@@ -28,6 +27,8 @@ import {
 } from "@components/ui/card";
 import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
+import { useAppDispatch } from "@/store/hooks";
+import { setUser } from "@/store/slices/userSlice";
 
 // Validation schema
 const registerSchema = z
