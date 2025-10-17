@@ -199,7 +199,7 @@ class AlgorithmRunner:
         steps = []
 
         while open_set:
-            current_cost, current = heappop(open_set)
+            _, current = heappop(open_set)
             steps.append({"position": list(current), "type": "visiting"})
 
             if current == self.goal:
