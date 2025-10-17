@@ -9,9 +9,9 @@ djangorestframework-simplejwt>=5.4,<6.0
 # Environment
 python-dotenv>=1.0.0
 
-# Database (optional - using SQLite by default)
+
 # psycopg2-binary>=2.9  # PostgreSQL
-# mysqlclient>=2.2  # MySQL
+
 
 # Production
 gunicorn>=23.0
