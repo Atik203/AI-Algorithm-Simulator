@@ -1,11 +1,8 @@
 
-.env
-.env.local
 .env.development.local
 .env.test.local
 .env.production.local
 *.env
-**/.env
 
 
 __pycache__/
@@ -59,7 +56,6 @@ celerybeat.pid
 .idea/
 
 # VS Code
-.vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
@@ -153,3 +149,6 @@ pnpm-lock.yaml
 !package.json
 !requirements.txt
 !manage.py
+config.bat
+temp_auto_push.bat
+temp_interactive_push.bat
